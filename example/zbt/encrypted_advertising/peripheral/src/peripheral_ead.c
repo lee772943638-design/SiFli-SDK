@@ -366,6 +366,7 @@ int run_peripheral_sample(int get_passkey_confirmation(struct bt_conn *conn))
     /* Wait for the peer to disconnect */
     await_signal(&disconn_signal);
 
+    k_sleep(K_MSEC(100));
     /* Restart advertising */
     err = start_adv(adv);
     if (err)

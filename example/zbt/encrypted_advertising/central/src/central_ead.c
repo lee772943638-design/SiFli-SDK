@@ -166,7 +166,7 @@ static void connect_device_found(const bt_addr_le_t *addr, int8_t rssi, uint8_t 
     }
 
     /* Connect only to devices in close range */
-    if (rssi < -70)
+    if (rssi < -50)
     {
         return;
     }
