@@ -1,5 +1,4 @@
-# 手表界面
-(有关示例及其用法的总体概述，请参阅上级 "examples" 目录中的 `README.md` 文件。)
+# 手表界面v9
 
 源码路径: example/multimedia/lvgl/watch_v9
 
@@ -17,17 +16,20 @@
 - 不支持520-hdk
 ```
 
-### 硬件需求
-本示例无需特殊硬件，可直接在支持的开发板上运行。
+## 自定义指定字体
+通过在resource\fonts中使用`SConscript`文件，将字体文件转换成C文件，并添加到编译中:
+- 将`.ttf`后缀的字体文件放在`resource/fonts`目录下
+- Env.ConvertFont(font_file, 'DroidSansFallback')
+    - `font_file`: ttf文件路径
+    - `DroidSansFallback`: C文件名
 
-### 配置项目
 
-#### 指定字体
-参考`src/resource/fonts/SConscript`，通过添加使用字体的.c文件，进而在使用的地方extern声明
+## 一次性转多ttf文件为C文件
 
-## 异常诊断
-用户在使用此示例时可能会遇到以下兼容性问题：
-- 在520-hdk开发板上运行会失败
-- SF32lb55x系列芯片不支持立方体旋转功能
+在SConscript中添加如下代码：
 
-如有任何技术疑问，请在GitHub上提出 [issue](https://github.com/OpenSiFli/SiFli-SDK/issues)。
+```python
+font_objs1 = Env.ConvertFont(font_file1, 'DroidSansFallback')
+font_objs2 = Env.ConvertFont(font_file2, 'DroidSansFallback_other_name')
+font_objs = font_objs1 + font_objs2
+```

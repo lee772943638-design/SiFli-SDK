@@ -1,4 +1,4 @@
-# 手表界面
+# 手表界面v8
 
 源码路径: example/multimedia/lvgl/watch
 这是一个基于LVGL v8实现的智能手表界面示例，包含多种交互界面和字体配置功能。该示例展示了如何使用SiFli-SDK的LVGL图形库组件构建嵌入式设备的用户界面。
