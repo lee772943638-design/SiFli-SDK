@@ -347,7 +347,7 @@ static int gen_onoff_send(bool val)
     return bt_mesh_model_send(&models[3], &ctx, &buf, NULL, NULL);
 }
 
-static void button_pressed(struct k_work *work)
+static void mesh_btn()
 {
     if (bt_mesh_is_provisioned())
     {
@@ -402,6 +402,8 @@ static void button_pressed(struct k_work *work)
     printk("Provisioned and configured!\n");
 }
 
+MSH_CMD_EXPORT(mesh_btn, enter button for Mesh example);
+
 static void bt_ready(int err)
 {
     if (err)
@@ -450,7 +452,7 @@ int main(void)
         dev_uuid[1] = 0xdd;
     }
 
-    k_work_init(&button_work, button_pressed);
+    k_work_init(&button_work, mesh_btn);
 
     err = board_init(&button_work);
     if (err)
