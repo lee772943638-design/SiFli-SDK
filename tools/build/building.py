@@ -689,6 +689,7 @@ def AddChildProj(proj_name, proj_path, img_embedded=False, shared_option=None, c
         proj_env = Environment(tools = ['mingw'],
             AS = rtconfig.AS, ASFLAGS = rtconfig.AFLAGS,
             CC = rtconfig.CC, CFLAGS = rtconfig.CFLAGS,
+            CXX = rtconfig.CXX, CXXFLAGS = rtconfig.CXXFLAGS,
             AR = rtconfig.AR, ARFLAGS = '-rc', LIBPATH=['.'],
             LINK = rtconfig.LINK, LINKFLAGS = rtconfig.LFLAGS)
             
