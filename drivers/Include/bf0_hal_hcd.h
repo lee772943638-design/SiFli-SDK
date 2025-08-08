@@ -180,6 +180,8 @@ typedef struct
 
     uint16_t  max_packet;         /*!< Endpoint Max packet size.
                                      This parameter must be a number between Min_Data = 0 and Max_Data = 64KB   */
+    uint8_t   max_packet_unfinish; /*!< Endpoint Max packet size for the last packet.
+                                     This parameter must be a number between Min_Data = 0 and Max_Data = 64KB   */
 
     uint8_t   data_pid;           /*!< Initial data PID.
                                      This parameter must be a number between Min_Data = 0 and Max_Data = 1      */
@@ -406,6 +408,7 @@ void HAL_HCD_Connect_Callback(HCD_HandleTypeDef *hhcd);
 void HAL_HCD_Disconnect_Callback(HCD_HandleTypeDef *hhcd);
 void HAL_HCD_PortEnabled_Callback(HCD_HandleTypeDef *hhcd);
 void HAL_HCD_PortDisabled_Callback(HCD_HandleTypeDef *hhcd);
+void HAL_HCD_Timerout_Callback(HCD_HandleTypeDef *hhcd);
 void HAL_HCD_HC_NotifyURBChange_Callback(HCD_HandleTypeDef *hhcd, uint8_t chnum,
         HCD_URBStateTypeDef urb_state);
 /**

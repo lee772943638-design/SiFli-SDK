@@ -197,12 +197,15 @@ static rt_size_t _ep_read_prepare(rt_uint8_t address, void *buffer, rt_size_t si
 {
     //LOG_D("_ep_read_prepare %d, %d\n", address, size);
     //HAL_PCD_EP_Receive(&_sifli_pcd, address, buffer, size);
+    //rt_kprintf("_ep_read_prepare %d, %d\n", address, size);
+
     HAL_PCD_EP_Prepare_Receive(&_sifli_pcd, address, buffer, size);
     return size;
 }
 
 static rt_size_t _ep_write(rt_uint8_t address, void *buffer, rt_size_t size)
 {
+    //rt_kprintf("_ep_write %d, %d\n", address, size);
     HAL_PCD_EP_Transmit(&_sifli_pcd, address, buffer, size);
     return size;
 }
@@ -229,41 +232,6 @@ static rt_err_t _test_mode(rt_uint16_t tm, uint8_t *data, uint8_t len)
     return RT_EOK;
 }
 
-void HAL_PCD_MspInit(PCD_HandleTypeDef *hpcd)
-{
-    HAL_RCC_EnableModule(RCC_MOD_USBC);
-
-#ifdef SOC_SF32LB58X
-    //hwp_usbc->utmicfg12 = hwp_usbc->utmicfg12 | 0x3; //set xo_clk_sel
-    hwp_usbc->ldo25 = hwp_usbc->ldo25 | 0xa; //set psw_en and ldo25_en
-    HAL_Delay(1);
-    hwp_usbc->swcntl3 = 0x1; //set utmi_en for USB2.0
-    hwp_usbc->usbcfg = hwp_usbc->usbcfg | 0x40; //enable usb PLL.
-#elif defined(SOC_SF32LB56X)||defined(SOC_SF32LB52X)
-    hwp_hpsys_cfg->USBCR |= HPSYS_CFG_USBCR_DM_PD | HPSYS_CFG_USBCR_DP_EN | HPSYS_CFG_USBCR_USB_EN;
-#elif defined(SOC_SF32LB55X)
-    hwp_hpsys_cfg->USBCR |= HPSYS_CFG_USBCR_DM_PD | HPSYS_CFG_USBCR_USB_EN;
-#endif
-}
-
-void HAL_PCD_MspDeInit(PCD_HandleTypeDef *hpcd)
-{
-#ifdef SOC_SF32LB58X
-    hwp_usbc->usbcfg &= ~0x40;  // Disable usb PLL.
-    hwp_usbc->swcntl3 = 0x0;
-    hwp_usbc->ldo25 &= ~0xa;    // Disable psw_en and ldo25_en
-#elif defined(SOC_SF32LB56X)||defined(SOC_SF32LB52X)
-    hwp_hpsys_cfg->USBCR &= ~(HPSYS_CFG_USBCR_DM_PD | HPSYS_CFG_USBCR_DP_EN | HPSYS_CFG_USBCR_USB_EN);
-#elif defined(SOC_SF32LB55X)
-    hwp_hpsys_cfg->USBCR &= ~(HPSYS_CFG_USBCR_DM_PD | HPSYS_CFG_USBCR_USB_EN);
-#endif
-    /* reset USB to make DP change to PULLDOWN state */
-    hwp_hpsys_rcc->RSTR2 |= HPSYS_RCC_RSTR2_USBC;
-    HAL_Delay_us(100);
-    hwp_hpsys_rcc->RSTR2 &= ~HPSYS_RCC_RSTR2_USBC;
-    HAL_RCC_DisableModule(RCC_MOD_USBC);
-}
-
 static rt_err_t _init(rt_device_t device)
 {
     PCD_HandleTypeDef *pcd;
@@ -274,7 +242,11 @@ static rt_err_t _init(rt_device_t device)
     pcd->Instance = hwp_usbc;
     memset(&pcd->Init, 0, sizeof pcd->Init);
     pcd->Init.dev_endpoints = 8;
+#ifdef SOC_SF32LB58X
+    pcd->Init.speed = PCD_SPEED_HIGH;
+#else
     pcd->Init.speed = PCD_SPEED_FULL;
+#endif
     pcd->Init.ep0_mps = 16;
     pcd->Init.phy_itface = PCD_PHY_EMBEDDED;
     /* Initialize LL Driver */
@@ -323,6 +295,102 @@ int sifli_usbd_register(void)
     return RT_EOK;
 }
 INIT_DEVICE_EXPORT(sifli_usbd_register);
+
+__weak void BSP_USB_Power_Down(void)
+{
+}
+__weak void BSP_USB_Power_Up(void)
+{
+
+}
+static void enabled_usb_protocol(void)
+{
+    BSP_USB_Power_Up();
+    HAL_PCD_MspInit(NULL);
+}
+static void disabled_usb_protocol(void)
+{
+    //HAL_PCD_DisconnectCallback(NULL);
+    HAL_PCD_MspDeInit(NULL);
+    BSP_USB_Power_Down();
+}
+
+#if defined(RT_USING_PM)
+static struct rt_device rt_usb_device;
+static PCD_HandleTypeDef *usb_pcd;
+static rt_err_t rt_usb_control(struct rt_device *dev, int cmd, void *args)
+{
+    switch (cmd)
+    {
+    case RT_DEVICE_CTRL_RESUME:
+    {
+        _init(dev);
+        HAL_PCD_MspDeInit(NULL);
+    }
+    break;
+    case RT_DEVICE_CTRL_SUSPEND:
+    {
+
+    }
+    break;
+    case RT_DEVICE_OFLAG_OPEN:
+    {
+        enabled_usb_protocol();
+    }
+    break;
+    case RT_DEVICE_OFLAG_CLOSE:
+    {
+        disabled_usb_protocol();
+    }
+    break;
+    default:
+        break;
+    }
+    return RT_EOK;
+}
+
+#ifdef RT_USING_DEVICE_OPS
+static const rt_device_ops usb_device_ops =
+{
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    rt_usb_control,
+};
+#endif
+static int rt_usb_register_rt_device(void)
+{
+    rt_err_t err = RT_EOK;
+    rt_device_t device;
+
+    device = &rt_usb_device;
+
+    device->type        = RT_Device_Class_Miscellaneous;
+    device->rx_indicate = RT_NULL;
+    device->tx_complete = RT_NULL;
+
+#ifdef RT_USING_DEVICE_OPS
+    device->ops         = &usb_device_ops;
+#else
+    device->init        = RT_NULL;
+    device->open        = RT_NULL;
+    device->close       = RT_NULL;
+    device->read        = RT_NULL;
+    device->write       = RT_NULL;
+    device->control     = rt_usb_control;
+#endif
+    device->user_data = &_sifli_pcd;
+
+    err = rt_device_register(device, "usb_reg", RT_DEVICE_FLAG_RDWR);
+    RT_ASSERT(RT_EOK == err);
+    return 0;
+}
+INIT_APP_EXPORT(rt_usb_register_rt_device);
+#endif
+
 #if (RT_DEBUG_USB==1)
 void HAL_DBG_printf(const char *fmt, ...)
 {
@@ -590,3 +658,4 @@ static uint8_t usbc_test_packet(void)
 MSH_CMD_EXPORT(usbc_test_packet, eye_test);
 
 #endif /* SF32LB56X || SF32LB52X */
+

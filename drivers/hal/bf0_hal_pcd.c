@@ -185,12 +185,20 @@ HAL_StatusTypeDef HAL_PCD_DeInit(PCD_HandleTypeDef *hpcd)
   */
 __weak void HAL_PCD_MspInit(PCD_HandleTypeDef *hpcd)
 {
-    /* Prevent unused argument(s) compilation warning */
-    UNUSED(hpcd);
+    HAL_RCC_EnableModule(RCC_MOD_USBC);
 
-    /* NOTE : This function Should not be modified, when the callback is needed,
-              the HAL_PCD_MspInit could be implemented in the user file
-     */
+#ifdef SF32LB58X
+    //hwp_usbc->utmicfg12 = hwp_usbc->utmicfg12 | 0x3; //set xo_clk_sel
+    hwp_usbc->utmicfg23 = 0xd8;
+    hwp_usbc->ldo25 = hwp_usbc->ldo25 | 0xa; //set psw_en and ldo25_en
+    HAL_Delay(1);
+    hwp_usbc->swcntl3 = 0x1; //set utmi_en for USB2.0
+    hwp_usbc->usbcfg = hwp_usbc->usbcfg | 0x40; //enable usb PLL.
+#elif defined(SF32LB56X)||defined(SF32LB52X)
+    hwp_hpsys_cfg->USBCR |= HPSYS_CFG_USBCR_DM_PD | HPSYS_CFG_USBCR_DP_EN | HPSYS_CFG_USBCR_USB_EN;
+#elif defined(SF32LB55X)
+    hwp_hpsys_cfg->USBCR |= HPSYS_CFG_USBCR_DM_PD | HPSYS_CFG_USBCR_USB_EN;
+#endif
 }
 
 /**
@@ -200,12 +208,20 @@ __weak void HAL_PCD_MspInit(PCD_HandleTypeDef *hpcd)
   */
 __weak void HAL_PCD_MspDeInit(PCD_HandleTypeDef *hpcd)
 {
-    /* Prevent unused argument(s) compilation warning */
-    UNUSED(hpcd);
-
-    /* NOTE : This function Should not be modified, when the callback is needed,
-              the HAL_PCD_MspDeInit could be implemented in the user file
-     */
+#ifdef SF32LB58X
+    hwp_usbc->usbcfg &= ~0x40;  // Disable usb PLL.
+    hwp_usbc->swcntl3 = 0x0;
+    hwp_usbc->ldo25 &= ~0xa;    // Disable psw_en and ldo25_en
+#elif defined(SF32LB56X)||defined(SF32LB52X)
+    hwp_hpsys_cfg->USBCR &= ~(HPSYS_CFG_USBCR_DM_PD | HPSYS_CFG_USBCR_DP_EN | HPSYS_CFG_USBCR_USB_EN);
+#elif defined(SF32LB55X)
+    hwp_hpsys_cfg->USBCR &= ~(HPSYS_CFG_USBCR_DM_PD | HPSYS_CFG_USBCR_USB_EN);
+#endif
+    /* reset USB to make DP change to PULLDOWN state */
+    hwp_hpsys_rcc->RSTR2 |= HPSYS_RCC_RSTR2_USBC;
+    HAL_Delay_us(100);
+    hwp_hpsys_rcc->RSTR2 &= ~HPSYS_RCC_RSTR2_USBC;
+    HAL_RCC_DisableModule(RCC_MOD_USBC);
 }
 
 /**
