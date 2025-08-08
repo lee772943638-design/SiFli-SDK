@@ -67,13 +67,41 @@ Before running this example, you need to prepare:
 ### menuconfig Configuration
 
 1. Enable Bluetooth (`BLUETOOTH`):
-![BLUETOOTH](./assets/bluetooth.png)
+    - Path: Sifli middleware → Bluetooth
+    - Enable: Enable bluetooth
+        - Macro switch: `CONFIG_BLUETOOTH`
+        - Description: Enable bluetooth function
 2. Enable PAN & A2DP, A2DP is to avoid iOS not supporting standalone PAN connection:
-![PAN & A2DP](./assets/bt_pan_a2dp.png)
+    - Path: Sifli middleware → Bluetooth → Bluetooth service → Classic BT service
+    - Enable: Enable BT finsh (optional)
+        - Macro switch: `CONFIG_BT_FINSH`
+        - Description: Enable finsh command line for Bluetooth control
+    - Enable: Manually select profiles
+        - Macro switch: `CONFIG_BT_PROFILE_CUSTOMIZE`
+        - Description: Manually select profiles to enable
+    - Enable: Enable PAN
+        - Macro switch: `CONFIG_CFG_PAN`
+        - Description: Enable PAN protocol
 3. Enable BT connection manager:
-![BT CM](./assets/bt_cm.png)
+    - Path: Sifli middleware → Bluetooth → Bluetooth service → Classic BT service
+    - Enable: Enable BT connection manager
+        - Macro switch: `CONFIG_BSP_BT_CONNECTION_MANAGER`
+        - Description: Use connection manager module to manage BT connections
 4. Enable NVDS:
-![NVDS](./assets/bt_nvds.png)
+    - Path: Sifli middleware → Bluetooth → Bluetooth service → Common service
+    - Enable: Enable NVDS synchronous
+        - Macro switch: `CONFIG_BSP_BLE_NVDS_SYNC`
+        - Description: Bluetooth NVDS synchronization. When Bluetooth is configured to HCPU, BLE NVDS can be accessed synchronously, enable this option; when Bluetooth is configured to LCPU, this option needs to be disabled
+
+5. Menuconfig for Bluetooth auto-connection:
+    - Path: Sifli middleware → Bluetooth → Bluetooth service → Classic BT service
+    - Enable: After enabling BT connection manager, Re-connect to last device if connection timeout happened or system power on will be enabled by default
+        - Macro switch: `CONFIG_BT_AUTO_CONNECT_LAST_DEVICE`
+        - Description: Enable auto-connection to the last connected device.
+    - Path: Third party packages
+    - Enable: FlashDB: Lightweight embedded database, usually enabled by default
+        - Macro switch: `CONFIG_PKG_USING_FLASHDB`
+        - Description: Enable FlashDB database to retain important data after power-off or restart
 
 ### Compilation and Flashing
 Switch to the example project directory and run the scons command to compile:

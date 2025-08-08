@@ -28,16 +28,35 @@ Before running this example, prepare:
 + iOS device.
 
 ### menuconfig Configuration
-
-1. Enable Bluetooth (`BLUETOOTH`):\
-![BLUETOOTH](./assets/bluetooth.png)
-2. Enable GAP, GATT Client, BLE connection manager and AMS:\
-![BLE MIX](./assets/gap_gatt_ble_cm_ams.png)
-3. Enable AMS in data service:\
-![BT CM](./assets/data_service_ams.png)
-4. Enable NVDS:\
-![NVDS](./assets/bt_nvds.png)
-
+1. Enable Bluetooth (`BLUETOOTH`):
+    - Path: Sifli middleware → Bluetooth
+    - Enable: Enable bluetooth
+        - Macro switch: `CONFIG_BLUETOOTH`
+        - Description: Enable Bluetooth functionality
+2. Enable GAP, GATT Client, BLE connection manager, and AMS:
+    - Path: Sifli middleware → Bluetooth → Bluetooth service → BLE service
+    - Enable: Enable BLE GAP central role
+        - Macro switch: `CONFIG_BLE_GAP_CENTRAL`
+        - Description: Switch for BLE CENTRAL (central device). When enabled, provides scanning and active connection initiation with peripherals.
+    - Enable: Enable BLE GATT client
+        - Macro switch: `CONFIG_BLE_GATT_CLIENT`
+        - Description: Switch for GATT CLIENT. When enabled, can actively search for and discover services, read/write data, and receive notifications.
+    - Enable: Enable BLE connection manager
+        - Macro switch: `CONFIG_BSP_BLE_CONNECTION_MANAGER`
+        - Description: Provides BLE connection control management, including multi-connection management, BLE pairing, link connection parameter updates, etc.
+    - Enable: Enable BLE AMS
+        - Macro switch: `CONFIG_BSP_BLE_AMS`
+        - Description: Apple Media Service. After registering AMS, provides iOS device playback control, playback synchronization, volume control, etc.
+3. Enable AMS in Data service:
+    - Path: Sifli middleware → Enable Data service
+    - Enable: Enable AMS Service
+        - Macro switch: `CONFIG_BSP_USING_AMS_SVC`
+        - Description: When using Data Service to register AMS, this option needs to be enabled
+4. Enable NVDS:
+    - Path: Sifli middleware → Bluetooth → Bluetooth service → Common service
+    - Enable: Enable NVDS synchronous
+        - Macro switch: `CONFIG_BSP_BLE_NVDS_SYNC`
+        - Description: Bluetooth NVDS synchronization. When Bluetooth is configured to HCPU, BLE NVDS can be accessed synchronously, so enable this option; when Bluetooth is configured to LCPU, this option needs to be disabled.
 
 ### Compilation and Flashing
 Switch to the example project directory and run the scons command to compile:

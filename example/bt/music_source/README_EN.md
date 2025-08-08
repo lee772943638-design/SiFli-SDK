@@ -44,29 +44,69 @@ Before running this example, you need to prepare:
 ### menuconfig Configuration
 
 1. This example needs to read and write files, so it requires a file system. Configure the `FAT` file system:
-![RT_USING_DFS_ELMFAT](./assets/mc_fat.png)
-
-     ```{tip}
+    - Path: RTOS → RT-Thread Components → Device virtual file system
+    - Enable: Enable elm-chan fatfs
+        - Macro switch: `CONFIG_RT_USING_DFS_ELMFAT`
+        - Description: Enable fatfs file system
+    ```{tip}
      mnt_init mounts the root partition.
-     ```
+    ```
 2. Enable AUDIO CODEC and AUDIO PROC:
-![AUDIO CODEC & PROC](./assets/mc_audcodec_audprc.png)
-3. Enable AUDIO (`AUDIO`):
-![AUDIO](./assets/mc_audio.png)
-4. Enable AUDIO MANAGER (`AUDIO_USING_MANAGER`):
-![AUDIO_USING_MANAGER](./assets/mc_audio_manager.png)
-5. Enable (`AUDIO_LOCAL_MUSIC`):
-![AUDIO_LOCAL_MUSIC](./assets/mc_local_music.png)
+    - Path: On-chip Peripheral RTOS Drivers
+    - Enable: Enable Audio Process driver
+        - Macro switch: `CONFIG_BSP_ENABLE_AUD_PRC`
+        - Description: Enable Audio process device, mainly used for audio data processing (including resampling, volume adjustment, etc.)
+    - Enable: Enable Audio codec driver
+        - Macro switch: `CONFIG_BSP_ENABLE_AUD_CODEC`
+        - Description: Enable Audio codec device, mainly used for DAC conversion
+3. Enable AUDIO(`AUDIO`):
+    - Path: Sifli middleware
+    - Enable: Enable Audio
+        - Description: Enable audio configuration options
+4. Enable AUDIO MANAGER(`AUDIO_USING_MANAGER`):
+    - Path: Sifli middleware → Enable Audio
+    - Enable: Enable audio manager
+        - Macro switch: `CONFIG_AUDIO_USING_MANAGER`
+        - Description: Use audio manager module for audio process handling
+5. Enable local audio(`AUDIO_LOCAL_MUSIC`)
+    - Path: Sifli middleware → Enable Audio
+    - Enable: Enable local audio
+        - Macro switch: `CONFIG_AUDIO_LOCAL_MUSIC`
+        - Description: Enable local audio function
 6. Pre-install audio file by placing it in the following \disk\ directory for pre-installation download:  
 * Audio file is located at music_source/disk/test.mp3
-7. Enable Bluetooth (`BLUETOOTH`):
-![BLUETOOTH](./assets/mc_bluetooth.png)
+7. Enable Bluetooth(`BLUETOOTH`):
+    - Path: Sifli middleware → Bluetooth
+    - Enable: Enable bluetooth
+        - Macro switch: `CONFIG_BLUETOOTH`
+        - Description: Enable bluetooth function
 8. Enable A2DP source and AVRCP:
-![A2DP SRC & AVRCP](./assets/mc_bt_a2dp_avrcp.png)
+    - Path: Sifli middleware → Bluetooth → Bluetooth service → Classic BT service
+    - Enable: Enable BT finsh (optional)
+        - Macro switch: `CONFIG_BT_FINSH`
+        - Description: Enable finsh command line for Bluetooth control
+    - Enable: Manually select profiles
+        - Macro switch: `CONFIG_BT_PROFILE_CUSTOMIZE`
+        - Description: Manually select profiles to enable
+    - Enable: Enable A2DP
+        - Macro switch: `CONFIG_CFG_AV`
+        - Description: Enable A2DP
+    - Enable: Enable A2DP source profile
+        - Macro switch: `CONFIG_CFG_AV_SRC`
+        - Description: Enable A2DP SOURCE ROLE
+    - Enable: Enable AVRCP
+        - Macro switch: `CONFIG_CFG_AVRCP`
+        - Description: Enable AVRCP profile
 9. Enable BT connection manager:
-![BT CM](./assets/mc_bt_cm.png)
+    - Path: Sifli middleware → Bluetooth → Bluetooth service → Classic BT service
+    - Enable: Enable BT connection manager
+        - Macro switch: `CONFIG_BSP_BT_CONNECTION_MANAGER`
+        - Description: Use connection manager module to manage BT connections
 10. Enable NVDS:
-![NVDS](./assets/mc_bt_nvds.png)
+    - Path: Sifli middleware → Bluetooth → Bluetooth service → Common service
+    - Enable: Enable NVDS synchronous
+        - Macro switch: `CONFIG_BSP_BLE_NVDS_SYNC`
+        - Description: Bluetooth NVDS synchronization. When Bluetooth is configured to HCPU, BLE NVDS can be accessed synchronously, enable this option; when Bluetooth is configured to LCPU, this option needs to be disabled
 
 ### Compilation and Flashing
 Switch to the example project directory and run the scons command to compile:

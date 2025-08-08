@@ -89,19 +89,42 @@ The development board can use the command `spp disc_all` to disconnect all SPP c
 ### menuconfig Configuration
 
 1. This example needs to read and write files, so it requires a file system. Configure the `FAT` file system:
-![RT_USING_DFS_ELMFAT](./assets/mc_fat.png)
-
-     ```{tip}
+    - Path: RTOS → RT-Thread Components → Device virtual file system
+    - Enable: Enable elm-chan fatfs
+        - Macro switch: `CONFIG_RT_USING_DFS_ELMFAT`
+        - Description: Enable fatfs file system
+    ```{tip}
      mnt_init mounts the root partition.
-     ```
+    ```
 2. Enable Bluetooth (`BLUETOOTH`):
-![BLUETOOTH](./assets/mc_bluetooth.png)
+    - Path: Sifli middleware → Bluetooth
+    - Enable: Enable bluetooth
+        - Macro switch: `CONFIG_BLUETOOTH`
+        - Description: Enable bluetooth function
 3. Enable SPP server and SPP client:
-![SPP Profile](./assets/mc_bt_spp.png)
+    - Path: Sifli middleware → Bluetooth → Bluetooth service → Classic BT service
+    - Enable: Enable BT finsh (optional)
+        - Macro switch: `CONFIG_BT_FINSH`
+        - Description: Enable finsh command line for Bluetooth control
+    - Enable: Manually select profiles
+        - Macro switch: `CONFIG_BT_PROFILE_CUSTOMIZE`
+        - Description: Manually select profiles to enable
+    - Enable: Enable SPP client
+        - Macro switch: `CONFIG_CFG_SPP_CLT`
+        - Description: Enable SPP client function for actively initiating SPP connections, etc.
+    - Enable: Enable SPP server
+        - Macro switch: `CONFIG_CFG_SPP_SRV`
+        - Description: Enable SPP server function so that peer devices can search and connect to SPP service
 4. Enable BT connection manager:
-![BT CM](./assets/mc_bt_cm.png)
+    - Path: Sifli middleware → Bluetooth → Bluetooth service → Classic BT service
+    - Enable: Enable BT connection manager
+        - Macro switch: `CONFIG_BSP_BT_CONNECTION_MANAGER`
+        - Description: Use connection manager module to manage BT connections
 5. Enable NVDS:
-![NVDS](./assets/mc_bt_nvds.png)
+    - Path: Sifli middleware → Bluetooth → Bluetooth service → Common service
+    - Enable: Enable NVDS synchronous
+        - Macro switch: `CONFIG_BSP_BLE_NVDS_SYNC`
+        - Description: Bluetooth NVDS synchronization. When Bluetooth is configured to HCPU, BLE NVDS can be accessed synchronously, enable this option; when Bluetooth is configured to LCPU, this option needs to be disabled
 
 ### Compilation and Flashing
 Switch to the example project directory and run the scons command to compile:

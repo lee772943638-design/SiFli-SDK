@@ -62,16 +62,41 @@
 + 可以获取天气的网址(默认为api.seniverse.com)
 
 ### menuconfig配置
-
 1. 使能蓝牙(`BLUETOOTH`)：
-![BLUETOOTH](./assets/bluetooth.png)
+    - 路径：Sifli middleware → Bluetooth
+    - 开启：Enable bluetooth
+        - 宏开关：`CONFIG_BLUETOOTH`
+        - 作用：使能蓝牙功能
 2. 使能PAN & A2DP，A2DP是为了避免IOS不支持单独连接PAN：
-![PAN & A2DP](./assets/bt_pan_a2dp.png)
+    - 路径：Sifli middleware → Bluetooth → Bluetooth service → Classic BT service
+    - 开启：Enable BT finsh（可选）
+        - 宏开关：`CONFIG_BT_FINSH`
+        - 作用：使能finsh命令行，用于控制蓝牙
+    - 开启：Manually select profiles
+        - 宏开关：`CONFIG_BT_PROFILE_CUSTOMIZE`
+        - 作用：手动选择使能的配置文件
+    - 开启：Enable PAN
+        - 宏开关：`CONFIG_CFG_PAN`
+        - 作用：使能PAN协议
 3. 使能BT connection manager：
-![BT CM](./assets/bt_cm.png)
-4. 使能NVDS
-![NVDS](./assets/bt_nvds.png)
-
+    - 路径：Sifli middleware → Bluetooth → Bluetooth service → Classic BT service
+    - 开启：Enable BT connection manager
+        - 宏开关：`CONFIG_BSP_BT_CONNECTION_MANAGER`
+        - 作用：使用connection manager模块管理bt的连接
+4. 使能NVDS：
+    - 路径：Sifli middleware → Bluetooth → Bluetooth service → Common service
+    - 开启：Enable NVDS synchronous
+        - 宏开关：`CONFIG_BSP_BLE_NVDS_SYNC`
+        - 作用：蓝牙NVDS同步。当蓝牙被配置到HCPU时，BLE NVDS可以同步访问，打开该选项；蓝牙被配置到LCPU时，需要关闭该选项
+5. 蓝牙自动连接需要打开的menuconfig：
+    - 路径：Sifli middleware → Bluetooth → Bluetooth service → Classic BT service
+    - 开启：Enable BT connection manager 后，会默认开启 Re-connect to last device if connection timeout happened or system power on
+        - 宏开关：`CONFIG_BT_AUTO_CONNECT_LAST_DEVICE`
+        - 作用：使能自动连接上次连接的设备。  
+    - 路径：Third party packages
+    - 开启：FlashDB: Lightweight embedded database，一般为默认开启
+        - 宏开关：`CONFIG_PKG_USING_FLASHDB`
+        - 作用：启用FlashDB数据库，在断电或重启后依然能保留重要数据。
 
 ### 编译和烧录
 切换到例程project目录，运行scons命令执行编译：

@@ -38,19 +38,54 @@ Before running this example, you need to prepare:
 ### menuconfig Configuration
 
 1. Enable AUDIO CODEC and AUDIO PROC:
-![AUDIO CODEC & PROC](./assets/mc_audcodec_audprc.png)
+    - Path: On-chip Peripheral RTOS Drivers
+    - Enable: Enable Audio Process driver
+        - Macro switch: `CONFIG_BSP_ENABLE_AUD_PRC`
+        - Description: Enable Audio process device, mainly used for audio data processing (including resampling, volume adjustment, etc.)
+    - Enable: Enable Audio codec driver
+        - Macro switch: `CONFIG_BSP_ENABLE_AUD_CODEC`
+        - Description: Enable Audio codec device, mainly used for DAC conversion
 2. Enable AUDIO(`AUDIO`):
-![AUDIO](./assets/mc_audio.png)
-3. Enable AUDIO MANAGER.(`AUDIO_USING_MANAGER`)
-![AUDIO_USING_MANAGER](./assets/mc_audio_manager.png)
+    - Path: Sifli middleware
+    - Enable: Enable Audio
+        - Description: Enable audio configuration options
+3. Enable AUDIO MANAGER(`AUDIO_USING_MANAGER`):
+    - Path: Sifli middleware → Enable Audio
+    - Enable: Enable audio manager
+        - Macro switch: `CONFIG_AUDIO_USING_MANAGER`
+        - Description: Use audio manager module for audio process handling
 4. Enable Bluetooth(`BLUETOOTH`):
-![BLUETOOTH](./assets/mc_bluetooth.png)
+    - Path: Sifli middleware → Bluetooth
+    - Enable: Enable bluetooth
+        - Macro switch: `CONFIG_BLUETOOTH`
+        - Description: Enable Bluetooth functionality
 5. Enable A2DP SNK and AVRCP:
-![A2DP SNK & AVRCP](./assets/mc_bt_a2dp_avrcp.png)
+    - Path: Sifli middleware → Bluetooth → Bluetooth service → Classic BT service
+    - Enable: Enable BT finsh (Optional)
+        - Macro switch: `CONFIG_BT_FINSH`
+        - Description: Enable finsh command line for Bluetooth control
+    - Enable: Manually select profiles
+        - Macro switch: `CONFIG_BT_PROFILE_CUSTOMIZE`
+        - Description: Manually select profiles to enable
+    - Enable: Enable A2DP
+        - Macro switch: `CONFIG_CFG_AV`
+        - Description: Enable A2DP
+    - Enable: Enable A2DP sink profile
+        - Macro switch: `CONFIG_CFG_AV_SNK`
+        - Description: Enable A2DP SINK ROLE
+    - Enable: Enable AVRCP
+        - Macro switch: `CONFIG_CFG_AVRCP`
+        - Description: Enable AVRCP profile
 6. Enable BT connection manager:
-![BT CM](./assets/mc_bt_cm.png)
-7. Enable NVDS
-![NVDS](./assets/mc_bt_nvds.png)
+    - Path: Sifli middleware → Bluetooth → Bluetooth service → Classic BT service
+    - Enable: Enable BT connection manager
+        - Macro switch: `CONFIG_BSP_BT_CONNECTION_MANAGER`
+        - Description: Use connection manager module to manage BT connections
+7. Enable NVDS:
+    - Path: Sifli middleware → Bluetooth → Bluetooth service → Common service
+    - Enable: Enable NVDS synchronous
+        - Macro switch: `CONFIG_BSP_BLE_NVDS_SYNC`
+        - Description: Bluetooth NVDS synchronization. When Bluetooth is configured to HCPU, BLE NVDS can be accessed synchronously, enable this option; when Bluetooth is configured to LCPU, this option needs to be disabled
 
 ### Compilation and Flashing
 Switch to the example project directory and run the scons command to compile:

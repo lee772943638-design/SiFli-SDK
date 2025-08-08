@@ -66,10 +66,22 @@ Before running this example, you need to prepare:
 + One development board supported by this example ([Supported Platforms](#Platform_bt_hfp)).
 
 ### menuconfig Configuration
-1. Enable Bluetooth:
-![BLUETOOTH](./assets/mc_bluetooth.png)
+1. Enable Bluetooth (`BLUETOOTH`):
+    - Path: Sifli middleware → Bluetooth
+    - Enable: Enable bluetooth
+        - Macro switch: `CONFIG_BLUETOOTH`
+        - Description: Enables Bluetooth functionality
 2. Enable hands-free HF role:
-![HandFree HF](./assets/mc_bt_handfree_hf.png)
+    - Path: Sifli middleware → Bluetooth → Bluetooth service → Classic BT service
+    - Enable: Enable BT finsh (Optional)
+        - Macro switch: `CONFIG_BT_FINSH`
+        - Description: Enable finsh command line for Bluetooth control
+    - Enable: Manually select profiles
+        - Macro switch: `CONFIG_BT_PROFILE_CUSTOMIZE`
+        - Description: Manually select the enabled profile
+    - Enable: Enable Handsfree HF
+        - Macro switch: `CONFIG_CFG_HFP_HF`
+        - Description: Enable Hands free hf ROLE
 
 ### Compilation and Flashing
 Switch to the example project directory and run the scons command to compile:

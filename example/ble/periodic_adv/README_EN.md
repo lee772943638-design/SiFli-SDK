@@ -30,11 +30,16 @@ Before running this example, prepare:
 + Mobile device.
 
 ### menuconfig Configuration
-1. Enable Bluetooth (`BLUETOOTH`):\
-![BLUETOOTH](./assets/bluetooth.png)
-2. Enable NVDS:\
-![NVDS](./assets/bt_nvds.png)
-
+1. Enable Bluetooth (`BLUETOOTH`):
+    - Path: Sifli middleware → Bluetooth
+    - Enable: Enable bluetooth
+        - Macro switch: `CONFIG_BLUETOOTH`
+        - Description: Enables Bluetooth functionality
+2. Enable NVDS:
+    - Path: Sifli middleware → Bluetooth → Bluetooth service → Common service
+    - Enable: Enable NVDS synchronous
+        - Macro switch: `CONFIG_BSP_BLE_NVDS_SYNC`
+        - Description: Bluetooth NVDS synchronization. When Bluetooth is configured to HCPU, BLE NVDS can be accessed synchronously, so enable this option; when Bluetooth is configured to LCPU, this option needs to be disabled.
 
 ### Compilation and Flashing
 Switch to the example project directory and run the scons command to compile:
