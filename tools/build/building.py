@@ -1600,6 +1600,7 @@ def InitBuild(bsp_root, build_dir, board):
 
 def PrepareModuleBuilding(env, root_directory, bsp_directory):
     import rtconfig
+    import platform
 
     global BuildOptions
     global Env
@@ -1633,11 +1634,44 @@ def PrepareModuleBuilding(env, root_directory, bsp_directory):
                 action='store_true',
                 default=False,
                 help='clean up the library by --buildlib')
+        AddOption('--no_cc',
+                dest = 'no_cc',
+                action = 'store_true',
+                default = False,
+                help = 'Do not compile')
     except:
         pass
 
+    platform_name = platform.system()
+    if platform_name == 'Windows':
+        tool_suffix = '.exe'
+    elif platform_name == 'Linux': 
+        tool_suffix = '_linux'
+    elif platform_name == 'Darwin':
+        tool_suffix = '_mac'
+    else:
+        raise ValueError('Unsupported platform: {}'.format(platform_name))
+
+    env['tool_suffix'] = tool_suffix
+
     # add program path
     env.PrependENVPath('PATH', rtconfig.EXEC_PATH)
+
+    # add image builder
+    img_file_action = SCons.Action.Action(ImgFileBuilder, 'GenImgFile $TARGET')
+    bld = Builder(action = img_file_action, suffix = '.c', src_suffix = '.png')
+    Env.Append(BUILDERS = {"ImgFile": bld})
+    Env.AddMethod(ImgResource, "ImgResource")
+
+    # add font builder
+    font_file_action = SCons.Action.Action(FontFileBuild, 'GenFontFile $TARGET')
+    bld = Builder(action = font_file_action, suffix = '.c', src_suffix = '.ttf', prefix = 'lvsf_font_', emitter = ModifyFontTargets)
+    Env.Append(BUILDERS = {"FontFile": bld})
+
+    # add lang builder
+    lang_action = SCons.Action.Action(LangBuild, 'Generating langpack ...')
+    bld = Builder(action = lang_action, src_suffix = '.json', emitter = ModifyLangTargets)
+    Env.Append(BUILDERS = {"Lang": bld})
 
 def GetConfigValue(name):
     assert type(name) == str, 'GetConfigValue: only string parameter is valid'

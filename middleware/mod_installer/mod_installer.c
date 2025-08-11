@@ -361,6 +361,68 @@ __EXIT:
 }
 
 
+struct rt_dlmodule *app_open(const char *res_package_path,
+                             const char *package_path)
+{
+    struct rt_dlmodule *module = NULL;
+
+    if (res_package_path)
+    {
+        res_module = dlopen(res_package_path, 0);
+        if (!res_module)
+        {
+            rt_kprintf("app_open open res module: %s failed.\n", res_package_path);
+            goto __EXIT;
+        }
+        RT_ASSERT(RT_EOK == dlmodule_register_ex_symbol_resolver(find_resource_symbol));
+    }
+
+    module = dlopen(package_path, 0);
+    if (res_module)
+    {
+        dlmodule_unregister_ex_symbol_resolver();
+    }
+    if (!module)
+    {
+        rt_kprintf("app_open open %s failed.\n", package_path);
+        if (res_module)
+        {
+            dlclose(res_module);
+            res_module = NULL;
+        }
+        goto __EXIT;
+    }
+    else
+    {
+        if (res_module)
+        {
+            module->res_module = res_module;
+            res_module = NULL;
+        }
+    }
+
+__EXIT:
+    return module;
+}
+
+rt_err_t app_close(struct rt_dlmodule *module)
+{
+    rt_err_t ret = RT_EOK;
+    if (!module)
+    {
+        rt_kprintf("app_close invalid module.\n");
+        return RT_ERROR;
+    }
+    if (module->res_module)
+    {
+        dlclose(module->res_module);
+        module->res_module = NULL;
+    }
+    dlclose(module);
+
+    return ret;
+}
+
 static int mod(int argc, char **argv)
 {
     const char *package_path = NULL;

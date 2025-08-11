@@ -91,18 +91,6 @@ typedef void (*module_cleanup_func_t)(void);
         }                                        \
     }
 
-#else
-#define MODULE_INIT_DEF(init_func)               \
-        void module_init(struct rt_dlmodule *module) \
-        {                                            \
-            module_init_func_t func = init_func;     \
-            if (func)                                \
-            {                                        \
-                func();                              \
-            }                                        \
-        }
-#endif
-
 #define MODULE_CLEANUP_DEF(cleanup_func)            \
     void module_cleanup(struct rt_dlmodule *module) \
     {                                               \
@@ -118,6 +106,27 @@ typedef void (*module_cleanup_func_t)(void);
             func();                                 \
         }                                           \
     }
+#else
+#define MODULE_INIT_DEF(init_func)               \
+        void module_init(struct rt_dlmodule *module) \
+        {                                            \
+            module_init_func_t func = init_func;     \
+            if (func)                                \
+            {                                        \
+                func();                              \
+            }                                        \
+        }
+
+#define MODULE_CLEANUP_DEF(cleanup_func)            \
+    void module_cleanup(struct rt_dlmodule *module) \
+    {                                               \
+        module_cleanup_func_t func = cleanup_func;  \
+        if (func)                                   \
+        {                                           \
+            func();                                 \
+        }                                           \
+    }
+#endif
 
 #include "module_name.h"
 
@@ -193,6 +202,27 @@ int32_t app_uninstall(const char *app_name, const char *res_install_path, const 
  * @retval 0: success, other: fail
  */
 int32_t mod_installer_init(uint32_t sys_prog_start_addr, uint32_t sys_prog_end_addr);
+
+/**
+ * @brief Open application
+ *
+ *
+ * @param[in]  res_package_path App resource .so file full path
+ * @param[in]  package_path App program .so file full path
+ *
+ * @retval module instance of App
+ */
+struct rt_dlmodule *app_open(const char *res_package_path, const char *package_path);
+
+/**
+ * @brief Close application
+ *
+ *
+ * @param[in]  module Module instance of App
+ *
+ * @retval RT_EOK: success, other: fail
+ */
+rt_err_t app_close(struct rt_dlmodule *module);
 
 /// @}  mod_installer
 
