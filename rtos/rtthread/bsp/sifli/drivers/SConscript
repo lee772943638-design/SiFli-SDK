@@ -12,7 +12,7 @@ if GetDepend(['RT_USING_PIN']):
 
 if GetDepend(['BSP_USING_BUTTON']):
     src += ['drv_button.c']
-    
+
 if GetDepend(['RT_USING_SERIAL']):
     src += ['drv_usart.c']
 
@@ -28,10 +28,7 @@ if GetDepend(['RT_USING_SPI']):
     src += ['drv_spi.c']
 
 if GetDepend(['RT_USING_QSPI']):
-    src += ['drv_qspi.c'] 
-
-if GetDepend(['BSP_USING_USBD']):
-    src += ['drv_usbd.c']
+    src += ['drv_qspi.c']
 
 if GetDepend(['RT_USING_I2C', 'RT_USING_I2C_BITOPS']):
     src += ['drv_soft_i2c.c']
@@ -98,7 +95,7 @@ if GetDepend(['BSP_ENABLE_AUD_CODEC']):
 
 if GetDepend(['BSP_USING_NN_ACC']):
     src += ['drv_nnacc.c']
-    
+
 if GetDepend(['BSP_USING_LCD']):
     if not GetDepend(['RT_USING_MESSAGEQUEUE']):
         print("Warning: LCDC driver requrie RT_USING_MESSAGEQUEUE!")
@@ -119,7 +116,7 @@ if GetDepend(['RT_USING_BT']):
     src += ['drv_bt.c']
 
 #if GetDepend(['ENABLE_SOLUTON_BT_INTERFACE']):
-   #src += ['drv_bt.c']	
+   #src += ['drv_bt.c']
 if GetDepend(['RT_USING_MOTOR']):
     src += ['drv_motor.c']
 # PSRAM will process flags in source code.
@@ -127,12 +124,6 @@ src += ['drv_psram.c']
 
 if GetDepend(['BSP_USING_MPI']):
     src += ['drv_mpi.c']
-
-if GetDepend(['BSP_USING_USBH']):
-    src += ['drv_usbh.c']
-
-if GetDepend(['BSP_USING_USBH']) or GetDepend(['BSP_USING_USBD']):
-    src += ['drv_usb_otg.c']
 
 if GetDepend(['BSP_USING_HW_AES']):
     src += ['drv_aes.c']
