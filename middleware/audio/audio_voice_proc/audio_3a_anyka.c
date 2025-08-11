@@ -68,15 +68,15 @@ static struct echo_param_vad vad_param =
 };
 
 /*
-    ×îºóËã·¨¿´µ½µÄmicÐÅºÅ±È²Î¿¼ÐÅºÅÍí¶àÉÙ¸ö²ÉÑù,
-    µ÷Õûg_mic_delay_ref£¬±£Ö¤Êµ¼Ê²âÁ¿³öÀ´ºÍÕâ¸öÖµÒ»ÖÂ
+    æœ€åŽç®—æ³•çœ‹åˆ°çš„micä¿¡å·æ¯”å‚è€ƒä¿¡å·æ™šå¤šå°‘ä¸ªé‡‡æ ·,
+    è°ƒæ•´g_mic_delay_refï¼Œä¿è¯å®žé™…æµ‹é‡å‡ºæ¥å’Œè¿™ä¸ªå€¼ä¸€è‡´
 */
 #define DELAY_SAMPLE    5
 
 /*
-   ÐèÒª°Ñ²Î¿¼ÐÅºÅ×îÇ°Ãæ²åÈë¶àÉÙ¸ö²ÉÑù£
-   ²ÅÄÜ°Ñ±£Ö¤Ëã·¨¿´µ½µÄmicÐÅºÅ±È²Î¿¼ÐÅºÅÑÓ³ÙDELAY_SAMPLE
-   ¸ö²ÉÑù
+   éœ€è¦æŠŠå‚è€ƒä¿¡å·æœ€å‰é¢æ’å…¥å¤šå°‘ä¸ªé‡‡æ ·
+   æ‰èƒ½æŠŠä¿è¯ç®—æ³•çœ‹åˆ°çš„micä¿¡å·æ¯”å‚è€ƒä¿¡å·å»¶è¿ŸDELAY_SAMPLE
+   ä¸ªé‡‡æ ·
 */
 static uint16_t g_mic_delay_ref = 434;
 
@@ -277,7 +277,7 @@ void audio_3a_open(uint32_t samplerate, uint8_t is_bt_voice, uint8_t disable_upl
             RT_ASSERT(ret);
         }
         char *strVal;
-        // ²ÎÊýÁÐ±íÖÐÒ²¿ÉÒÔ°üº¬ÒôÆµ¿âÒÔÍâµÄ²ÎÊý£¬ÀýÈç ai_gain=3 ±íÊ¾ mic µÄÄ£ÄâÔöÒæÅäÖÃÎª3
+        // å‚æ•°åˆ—è¡¨ä¸­ä¹Ÿå¯ä»¥åŒ…å«éŸ³é¢‘åº“ä»¥å¤–çš„å‚æ•°ï¼Œä¾‹å¦‚ ai_gain=3 è¡¨ç¤º mic çš„æ¨¡æ‹Ÿå¢žç›Šé…ç½®ä¸º3
         strVal = SD_ParamFactory_GetValue(thiz->factory_near, "ai_gain");
         if (strVal)
         {
