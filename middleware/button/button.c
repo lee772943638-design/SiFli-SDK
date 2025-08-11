@@ -24,7 +24,6 @@
 #define GROUP_PIN_NUM    (64)
 #define MAX_GROUP_NUM    (4)
 #define MAX_PIN          (MAX_GROUP_NUM * GROUP_PIN_NUM - 1)
-#define BUTTON_VOLT_VALID_RANGE (50)
 
 
 #ifndef BUTTON_SERVICE_MAX_CLIENT_NUM
@@ -60,6 +59,7 @@ typedef struct
 typedef struct
 {
     uint16_t voltage;
+    uint16_t volt_range;
     adc_button_handler_t handler;
 #ifdef BUTTON_SERVICE_ENABLED
     datas_handle_t service_handle;
@@ -97,15 +97,15 @@ static button_ctx_t s_button_ctx;
 static adc_button_cfg_t s_adc_button_group1[ADC_BUTTON_GROUP1_MAX_NUM] =
 {
 #ifdef ADC_BUTTON_GROUP1_BUTTON1_VOLT
-    {ADC_BUTTON_GROUP1_BUTTON1_VOLT, NULL},
+    {ADC_BUTTON_GROUP1_BUTTON1_VOLT, ADC_BUTTON_GROUP1_BUTTON1_RANGE, NULL},
 #endif /* ADC_BUTTON_GROUP1_BUTTON1_VOLT */
 
 #ifdef ADC_BUTTON_GROUP1_BUTTON2_VOLT
-    {ADC_BUTTON_GROUP1_BUTTON2_VOLT, NULL},
+    {ADC_BUTTON_GROUP1_BUTTON2_VOLT, ADC_BUTTON_GROUP1_BUTTON2_RANGE, NULL},
 #endif /* ADC_BUTTON_GROUP1_BUTTON2_VOLT */
 
 #ifdef ADC_BUTTON_GROUP1_BUTTON3_VOLT
-    {ADC_BUTTON_GROUP1_BUTTON3_VOLT, NULL}
+    {ADC_BUTTON_GROUP1_BUTTON3_VOLT, ADC_BUTTON_GROUP1_BUTTON3_RANGE, NULL}
 #endif /* ADC_BUTTON_GROUP1_BUTTON3_VOLT */
 };
 
@@ -115,15 +115,15 @@ static adc_button_cfg_t s_adc_button_group1[ADC_BUTTON_GROUP1_MAX_NUM] =
 static adc_button_cfg_t s_adc_button_group2[ADC_BUTTON_GROUP2_MAX_NUM] =
 {
 #ifdef ADC_BUTTON_GROUP2_BUTTON1_VOLT
-    {ADC_BUTTON_GROUP2_BUTTON1_VOLT, NULL}
+    {ADC_BUTTON_GROUP2_BUTTON1_VOLT, ADC_BUTTON_GROUP2_BUTTON1_RANGE, NULL}
 #endif /* ADC_BUTTON_GROUP1_BUTTON1_VOLT */
 
 #ifdef ADC_BUTTON_GROUP2_BUTTON2_VOLT
-    {ADC_BUTTON_GROUP2_BUTTON2_VOLT, NULL}
+    {ADC_BUTTON_GROUP2_BUTTON2_VOLT, ADC_BUTTON_GROUP2_BUTTON2_RANGE, NULL}
 #endif /* ADC_BUTTON_GROUP1_BUTTON2_VOLT */
 
 #ifdef ADC_BUTTON_GROUP2_BUTTON3_VOLT
-    {ADC_BUTTON_GROUP2_BUTTON3_VOLT, NULL}
+    {ADC_BUTTON_GROUP2_BUTTON3_VOLT, ADC_BUTTON_GROUP2_BUTTON3_RANGE, NULL}
 #endif /* ADC_BUTTON_GROUP1_BUTTON3_VOLT */
 };
 #endif /* ADC_BUTTON_GROUP2_MAX_NUM */
@@ -233,8 +233,8 @@ static int8_t button_find_adc_button_id(const adc_button_group_cfg_t *adc_btn_gr
     read_arg.value /= 10;
     for (i = 0; i < adc_btn_group_cfg->num; i++)
     {
-        if ((read_arg.value >= (adc_btn_cfg[i].voltage - BUTTON_VOLT_VALID_RANGE))
-                && (read_arg.value <= (adc_btn_cfg[i].voltage + BUTTON_VOLT_VALID_RANGE)))
+        if ((read_arg.value >= (adc_btn_cfg[i].voltage - adc_btn_cfg[i].volt_range))
+                && (read_arg.value <= (adc_btn_cfg[i].voltage + adc_btn_cfg[i].volt_range)))
         {
             break;
         }
