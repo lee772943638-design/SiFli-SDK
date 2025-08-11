@@ -389,3 +389,207 @@ int cmd_usbdtest(int argc, char *argv[])
 MSH_CMD_EXPORT_ALIAS(cmd_usbdtest, usbd, Test USB device);
 #endif  /* USBD_FUNC_TEST */
 
+#ifndef SOC_SF32LB58X
+
+
+#define TEST_FAIL       0x0
+#define TEST_PASS       0x1
+#define TEST_UNFINISHED 0x2
+
+void wait(uint32_t cycle)
+{
+
+    for (uint32_t i = 0; i < cycle; i++)
+    {
+        __NOP();
+    }
+
+}
+
+uint8_t usbc_test_packet()
+{
+    uint32_t error_flag = 0;
+    uint32_t usb_rx_len;
+    uint32_t ep00_rdata;
+    uint32_t ep1_rdata;
+    uint32_t set_addr_flag;
+    uint32_t ep0_fifo_addr = USBC_BASE + 0x20;
+    uint32_t tx_src_addr = USBC_BASE + 0x8;
+    uint32_t tx_src_addr2 = USBC_BASE + 0x10;
+    uint32_t tx_dst_addr = 0x20018800;
+    uint32_t rx_src_addr = 0x20018800;
+    uint32_t rx_dst_addr = USBC_BASE + 0xc;
+    int i, sel;
+
+    hwp_hpsys_cfg->USBCR |= HPSYS_CFG_USBCR_DM_PD;
+    hwp_hpsys_cfg->USBCR |= HPSYS_CFG_USBCR_DP_EN;
+    hwp_hpsys_cfg->USBCR |= HPSYS_CFG_USBCR_USB_EN;
+    hwp_hpsys_rcc->ENR2 |= HPSYS_RCC_ENR2_USBC;
+    hwp_pinmux1->PAD_PA17 = hwp_pinmux1->PAD_PA17 & (~HPSYS_PINMUX_PAD_PA17_PE);
+    hwp_pinmux1->PAD_PA18 = hwp_pinmux1->PAD_PA18 & (~HPSYS_PINMUX_PAD_PA18_PE);
+
+    while (!(hwp_hpsys_aon->ACR & HPSYS_AON_ACR_HXT48_RDY_Msk));
+    hwp_pmuc->HXT_CR1 |= PMUC_HXT_CR1_BUF_DLL_EN;
+
+    LOG_I("Enable DLL1\n");
+    // enable DLL1 (120MHz)
+    hwp_hpsys_cfg->CAU2_CR |= HPSYS_CFG_CAU2_CR_HPBG_EN;
+    hwp_hpsys_cfg->CAU2_CR |= HPSYS_CFG_CAU2_CR_HPBG_VDDPSW_EN;
+    hwp_hpsys_rcc->DLL1CR = (hwp_hpsys_rcc->DLL1CR & ~HPSYS_RCC_DLL1CR_STG_Msk) |
+                            (0x9 << HPSYS_RCC_DLL1CR_STG_Pos);
+    hwp_hpsys_rcc->DLL1CR = (hwp_hpsys_rcc->DLL1CR & ~HPSYS_RCC_DLL1CR_OUT_DIV2_EN_Msk) |
+                            (0x1 << HPSYS_RCC_DLL1CR_OUT_DIV2_EN_Pos);
+    hwp_hpsys_rcc->DLL1CR |= HPSYS_RCC_DLL1CR_EN;
+    while (!(hwp_hpsys_rcc->DLL1CR & HPSYS_RCC_DLL1CR_READY_Msk));
+
+    // select DLL1 as sys clock
+    hwp_hpsys_rcc->CSR = (hwp_hpsys_rcc->CSR & ~HPSYS_RCC_CSR_SEL_SYS_Msk) |
+                         (0x3 << HPSYS_RCC_CSR_SEL_SYS_Pos);
+
+    hwp_hpsys_rcc->CFGR = (hwp_hpsys_rcc->CFGR & ~HPSYS_RCC_CFGR_HDIV_Msk) |
+                          (0x1 << HPSYS_RCC_CFGR_HDIV_Pos);
+
+    LOG_I("Enable DLL2\n");
+    // enable DLL2 (240MHz)
+    hwp_hpsys_rcc->DLL2CR = (hwp_hpsys_rcc->DLL2CR & ~HPSYS_RCC_DLL2CR_STG_Msk) |
+                            (0x9 << HPSYS_RCC_DLL2CR_STG_Pos);
+    hwp_hpsys_rcc->DLL2CR = (hwp_hpsys_rcc->DLL2CR & ~HPSYS_RCC_DLL2CR_OUT_DIV2_EN_Msk) |
+                            (0x0 << HPSYS_RCC_DLL2CR_OUT_DIV2_EN_Pos);
+    hwp_hpsys_rcc->DLL2CR |= HPSYS_RCC_DLL2CR_EN;
+    while (!(hwp_hpsys_rcc->DLL2CR & HPSYS_RCC_DLL2CR_READY_Msk)) {};
+
+
+    //sel = RAND(1, 0);
+    //if(sel == 1){
+    LOG_I("Configure USBC clock to SYSCLK/2\n");
+    // select SYS clock as USBC source and DIV=2
+    hwp_hpsys_rcc->CSR &= ~HPSYS_RCC_CSR_SEL_USBC;
+    hwp_hpsys_rcc->USBCR = 0x2;
+    wait(1000);
+    //}
+    //else {
+    //  rt_krt_kprint("Configure USBC clock to DLL2/4\n");
+    // select SYS clock as USBC source and DIV=4
+    //  hwp_hpsys_rcc->USBCR = 0x4;
+    //  hwp_hpsys_rcc->CSR |= HPSYS_RCC_CSR_SEL_USBC;
+    //  wait(1000);
+    //}
+
+    NVIC_EnableIRQ(USBC_IRQn);
+
+//---------------------------------------------------//
+//-------------------set addr ep0--------------------//
+//---------------------------------------------------//
+
+    LOG_I("USBC LOG: *******get state*******!\n");
+// rt_krt_kprint( "USBC INFO: devctl=0x%x ",hwp_usbc->devctl);
+    //hwp_usbc->usbcfg = hwp_usbc->usbcfg & 0xef;
+    //hwp_usbc->usbcfg = hwp_usbc->usbcfg | 0x20;
+    //hwp_usbc->usbcfg = hwp_usbc->usbcfg | 0x40; //enable usb
+    //hwp_usbc->power = 0x40;   //soft_con
+    hwp_usbc->testmode = 0x20; //force_FS
+    //hwp_usbc->intrusbe = hwp_usbc->intrusbe | 0x30;
+    //hwp_usbc->rxmaxp = 0x40;
+    //hwp_usbc->txmaxp = 0x40;
+    //hwp_usbc->dpbtxdisl = 0x2;
+    //hwp_usbc->dpbrxdisl = 0x2;
+    hwp_usbc->devctl = hwp_usbc->devctl | 0x1; // set session
+    hwp_usbc->testmode = 0x8; //force_FS
+    while (1)
+    {
+        //-------usb rst int--------//
+        hwp_usbc->fifox[0] = 0x00000000;
+        hwp_usbc->fifox[0] = 0x00000000;
+        hwp_usbc->fifox[0] = 0xAAAAAA00;
+        hwp_usbc->fifox[0] = 0xAAAAAAAA;
+        hwp_usbc->fifox[0] = 0xEEEEEEAA;
+        hwp_usbc->fifox[0] = 0xEEEEEEEE;
+        hwp_usbc->fifox[0] = 0xFFFFFEEE;
+        hwp_usbc->fifox[0] = 0xFFFFFFFF;
+        hwp_usbc->fifox[0] = 0xFFFFFFFF;
+        hwp_usbc->fifox[0] = 0xDFBF7FFF;
+        hwp_usbc->fifox[0] = 0xFDFBF7EF;
+        hwp_usbc->fifox[0] = 0xDFBF7EFC;
+        hwp_usbc->fifox[0] = 0xFDFBF7EF;
+        (*(volatile unsigned char *)((0x50047020))) = (0x7e);
+
+        //hwp_usbc->testmode = 0x28; //force_FS
+        hwp_usbc->csr0_txcsr = 0x2;
+        wait(20000);
+        hwp_hpsys_rcc->RSTR2 |= HPSYS_RCC_RSTR2_USBC;
+        wait(50);
+        hwp_hpsys_rcc->RSTR2 &= ~HPSYS_RCC_RSTR2_USBC;
+        wait(40);
+        hwp_usbc->testmode = 0x28; //force_FS
+        hwp_usbc->devctl = hwp_usbc->devctl | 0x1; // set session
+    }
+    //__WFI();
+
+    //hwp_usbc->power = hwp_usbc->power | 0x8;
+    //wait(2000);
+    //hwp_usbc->power = hwp_usbc->power & 0xf7;
+
+    //while(1);
+
+    //if(usb_int_sta1!=0)
+    //   rt_krt_kprint( "R\n");
+    //if(usb_int_sta2!=0)
+    //   return  TEST_FAIL;
+    //if(usb_int_sta3!=0)
+    //   return  TEST_FAIL;
+
+    ////---------ep1 din----------//
+    // hwp_usbc->index = 0x1;
+    // hwp_usbc->rxmaxp = 0x40;
+    // hwp_usbc->txmaxp = 0x40;
+    // hwp_usbc->csr0_txcsr = 0x2000;  //tx*/
+
+    // for(i=0;i<2;i++)
+    //    hwp_usbc->fifox[1] = i+0x10000000;
+
+    // hwp_usbc->csr0_txcsr = 0x2001;
+
+    //__WFI();
+    //if(usb_int_sta1!=0)
+    //   error_flag=1;
+    //if(usb_int_sta2==2)
+    //   rt_krt_kprint( "1i\n");
+    //else
+    //   error_flag=1;
+    //if(usb_int_sta3!=0)
+    //   error_flag=1;
+
+    ////---------ep1 dout----------//
+    //hwp_usbc->csr0_txcsr = 0x0;  //rx
+    //__WFI();
+    //if(usb_int_sta1!=0)
+    //   error_flag=1;
+    //if(usb_int_sta2!=0)
+    //   error_flag=1;
+    //if(usb_int_sta3==2)
+    //   rt_krt_kprint( "1o\n");
+    //else
+    //   error_flag=1;
+
+    // usb_rx_len = hwp_usbc->rxcount;
+    //
+    // for(i=0;i<(usb_rx_len>>2);i++)
+    // {
+    //    ep00_rdata = hwp_usbc->fifox[1];
+    //    if(ep00_rdata!=i+0x10000000)
+    //      {error_flag=1;
+    //        rt_krt_kprint( "E1\n");}
+    // }
+
+    //while(1);
+// rt_krt_kprint( "USBC ERR: error ep1 expet=0x%x , get= 0x%x\n",i,ep1_rdata);
+    if (error_flag == 1)
+        return  TEST_FAIL;
+    else
+        return TEST_PASS; // or TEST_FAIL, add conditional checker in C
+}
+
+MSH_CMD_EXPORT(usbc_test_packet, eye_test);
+
+
+#endif
