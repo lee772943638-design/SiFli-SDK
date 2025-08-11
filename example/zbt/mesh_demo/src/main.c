@@ -129,18 +129,21 @@ static const struct bt_mesh_comp comp =
 
 static void configure(void)
 {
-    printk("Configuring...\n");
+    printk("Configuring...\n Add Application Key %f\n", app_idx);
 
     /* Add Application Key */
     bt_mesh_cfg_cli_app_key_add(net_idx, addr, net_idx, app_idx, app_key, NULL);
 
+    printk("Bind to vendor model\n");
     /* Bind to vendor model */
     bt_mesh_cfg_cli_mod_app_bind_vnd(net_idx, addr, addr, app_idx, MOD_LF, BT_COMP_ID_LF, NULL);
 
+    printk("Bind to Health model\n");
     /* Bind to Health model */
     bt_mesh_cfg_cli_mod_app_bind(net_idx, addr, addr, app_idx, BT_MESH_MODEL_ID_HEALTH_SRV,
                                  NULL);
 
+    printk("Add model subscriptionmodel\n");
     /* Add model subscription */
     bt_mesh_cfg_cli_mod_sub_add_vnd(net_idx, addr, addr, GROUP_ADDR, MOD_LF, BT_COMP_ID_LF,
                                     NULL);
@@ -218,6 +221,11 @@ static void bt_ready(int err)
     {
         printk("Provisioning completed\n");
         configure();
+
+        /* Models must be bound to an app key to send and receive messages with
+         * it:
+         */
+        vnd_models[0].keys[0] = 0;
     }
 
 #if NODE_ADDR != PUBLISHER_ADDR
@@ -245,6 +253,7 @@ static uint16_t target = GROUP_ADDR;
 void board_button_1_pressed(void)
 {
     NET_BUF_SIMPLE_DEFINE(msg, 3 + 4);
+
     struct bt_mesh_msg_ctx ctx =
     {
         .app_idx = app_idx,
