@@ -389,14 +389,12 @@ int cmd_usbdtest(int argc, char *argv[])
 MSH_CMD_EXPORT_ALIAS(cmd_usbdtest, usbd, Test USB device);
 #endif  /* USBD_FUNC_TEST */
 
-#ifndef SOC_SF32LB58X
-
-
+#if defined(SF32LB56X) || defined(SF32LB52X)
 #define TEST_FAIL       0x0
 #define TEST_PASS       0x1
 #define TEST_UNFINISHED 0x2
 
-void wait(uint32_t cycle)
+static void wait(uint32_t cycle)
 {
 
     for (uint32_t i = 0; i < cycle; i++)
@@ -406,7 +404,7 @@ void wait(uint32_t cycle)
 
 }
 
-uint8_t usbc_test_packet()
+static uint8_t usbc_test_packet(void)
 {
     uint32_t error_flag = 0;
     uint32_t usb_rx_len;
@@ -591,5 +589,4 @@ uint8_t usbc_test_packet()
 
 MSH_CMD_EXPORT(usbc_test_packet, eye_test);
 
-
-#endif
+#endif /* SF32LB56X || SF32LB52X */
