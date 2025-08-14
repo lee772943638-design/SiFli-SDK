@@ -38,10 +38,6 @@ git version 2.47.0.windows.1
 
 SiFli-SDK 脚本安装仅支持`powershell`，并推荐使用`PowerShell 7`版本。具体的安装流程可以参考微软文档 [PowerShell 安装](https://learn.microsoft.com/zh-cn/powershell/scripting/install/installing-powershell-on-windows?view=powershell-7.5)。
 
-```{note}
-对国内用户来说，可以从如下镜像链接直接下载 PowerShell 7 安装包：<https://mirror4.lzu.edu.cn/github-release/PowerShell/PowerShell/v7.4.10%20Release%20of%20PowerShell/PowerShell-7.4.10-win-x64.msi>
-```
-
 对于终端的选择，我们建议使用 [Windows Terminal](https://aka.ms/terminal)，用户也可以自行选择其他终端，例如VSCode自带的集成终端。但是更推荐使用 Windows Terminal。需要注意的是，在一些较新的 Windows 10/11 版本中，Windows Terminal 已经预装了。
 
 想要打开`PowerShell`，可以使用如下方式：

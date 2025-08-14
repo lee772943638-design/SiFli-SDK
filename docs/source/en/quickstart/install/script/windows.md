@@ -38,10 +38,6 @@ git version 2.47.0.windows.1
 
 SiFli-SDK script installation only supports `powershell`, and we recommend using `PowerShell 7` version. For specific installation procedures, please refer to the Microsoft documentation [PowerShell Installation](https://learn.microsoft.com/zh-cn/powershell/scripting/install/installing-powershell-on-windows?view=powershell-7.5).
 
-```{note}
-For domestic users in China, you can directly download PowerShell 7 installer from the following mirror link: <https://mirror4.lzu.edu.cn/github-release/PowerShell/PowerShell/v7.4.10%20Release%20of%20PowerShell/PowerShell-7.4.10-win-x64.msi>
-```
-
 For terminal choice, we recommend using [Windows Terminal](https://aka.ms/terminal). Users can also choose other terminals, such as the integrated terminal that comes with VSCode. However, Windows Terminal is more recommended. Note that in some newer Windows 10/11 versions, Windows Terminal is already pre-installed.
 
 To open `PowerShell`, you can use the following methods:
