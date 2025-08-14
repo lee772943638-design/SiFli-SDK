@@ -1729,12 +1729,12 @@ def BuildJLinkLoadScript(main_env):
         for file in download_file
     )
 
-    generate_uart_download_bat(main_env, device, download_list, ImgDownUart_PATH)
-    generate_uart_download_sh(main_env, device, download_list, ImgDownUart_PATH)
+    generate_uart_download_bat(main_env, device, memory, download_list, ImgDownUart_PATH)
+    generate_uart_download_sh(main_env, device, memory, download_list)
     generate_sftool_param(main_env, device, memory, download_file)
 
 
-def generate_uart_download_bat(main_env, device, download_list, ImgDownUart_PATH):
+def generate_uart_download_bat(main_env, device, memory, download_list, ImgDownUart_PATH):
     uart_comment = '''@echo off
 title=uart download
 set WORK_PATH=%~dp0
@@ -1760,14 +1760,14 @@ if %errorlevel%==0 (
 cd %CURR_PATH%
 '''.format(ImgDownUart_PATH, main_env['JLINK_DEVICE']))
     else:
-        uart_comment += MakeLine(f"sftool -p COM%input% -c {device} write_flash {download_list}\n")
+        uart_comment += MakeLine(f"sftool -p COM%input% -c {device} -m {memory.lower()} write_flash {download_list}\n")
     uart_comment += MakeLine('if "%ENV_ROOT%"=="" pause\n')
     
     uart_f = open(os.path.join(main_env['build_dir'], 'uart_download.bat'), 'w')
     uart_f.write(uart_comment)
     uart_f.close()
 
-def generate_uart_download_sh(main_env, device, download_list, ImgDownUart_PATH):
+def generate_uart_download_sh(main_env, device, memory,download_list):
     uart_comment = '''#!/bin/bash
 
 WORK_PATH=$(dirname "$0")
@@ -1785,7 +1785,7 @@ echo "$input"
     if os.getenv("LEGACY_ENV"):
         uart_comment += MakeLine('echo "Legacy mode is not supported on Linux/macOS"')
     else:
-        uart_comment += MakeLine(f'sftool -p "$input" -c {device} write_flash {download_list}\n')
+        uart_comment += MakeLine(f'sftool -p "$input" -c {device} -m {memory.lower()} write_flash {download_list}\n')
     
     uart_sh_path = os.path.join(main_env['build_dir'], 'uart_download.sh')
     uart_f = open(uart_sh_path, 'w')
