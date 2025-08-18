@@ -298,6 +298,7 @@ typedef struct _audio_device_ctrl_t
     uint8_t                 tx_mix_dst_channel;
     uint8_t                 is_tx_need_mix;
     uint8_t                 is_busy;
+    uint8_t                 pdm_channels;
     uint8_t                 tx_count;
     uint8_t                 rx_count;
     uint8_t                 is_registerd;
@@ -536,7 +537,7 @@ static void inline speaker_update_volume(audio_device_speaker_t *my, int16_t spf
 #if VOLUME_0_MUTE
     if (vol == 0)
     {
-        memset(spframe, 0, len);
+        memset(spframe, 0, len * 2);
     }
 #endif
     if (eq_is_working())
@@ -876,6 +877,12 @@ static inline void process_speaker_rx(audio_server_t *server, audio_device_speak
 #if defined(AUDIO_RX_USING_I2S)
     len = rt_device_read(my->i2s, 0, my->rx_data_tmp, readlen);
 #elif defined(AUDIO_RX_USING_PDM)
+    //two PDM
+    if (my->pdm_channels != 1)
+    {
+        //has right channel, only left channel using single pdm channel
+        readlen <<= 1;
+    }
     len = rt_device_read(my->pdm, 0, my->rx_data_tmp, readlen);
 #else
     len = rt_device_read(my->audprc_dev, 0, my->rx_data_tmp, readlen);
@@ -889,12 +896,13 @@ static inline void process_speaker_rx(audio_server_t *server, audio_device_speak
     LOG_D("mic_rx_ind readlen:%d", len);
     if (my->is_need_3a)
     {
+#ifndef AUDIO_RX_USING_PDM
         if (my->rx_drop_cnt < 25)
         {
             my->rx_drop_cnt++;
             memset(my->rx_data_tmp, 0, readlen);
         }
-
+#endif
         audio_3a_uplink(my->rx_data_tmp, readlen, server->public_is_rx_mute, server->is_bt_3a);
     }
     else
@@ -1224,10 +1232,11 @@ static void config_rx(audio_device_speaker_t *my)
         caps.sub_type = AUDIO_DSP_PARAM;
         caps.udata.config.samplefmt = PDM_CHANNEL_DEPTH_16BIT;
         caps.udata.config.samplerate = PDM_SAMPLE_16KHZ;
-        caps.udata.config.channels = 1; //2
+        caps.udata.config.channels = 1; /*1---pdm left only; 2---pdm stereo */
+        my->pdm_channels = caps.udata.config.channels;
         rt_device_control(my->pdm, AUDIO_CTL_CONFIGURE, &caps);
         int val_db = get_pdm_volume();
-        LOG_I("pdm gain=%d * 0.5db", val_db);
+        LOG_I("pdm gain=%d * 0.5db channel=%d", val_db, caps.udata.config.channels);
         rt_device_control(my->pdm, AUDIO_CTL_SETVOLUME, (void *)val_db);
         int stream = AUDIO_STREAM_PDM_PRESTART;
         LOG_I("pdm rx pre start=0x%x", stream);
@@ -1378,6 +1387,7 @@ static rt_err_t micbias_rx_ind(rt_device_t dev, rt_size_t size)
     return 0;
 }
 
+#if MULTI_CLIENTS_AT_WORKING
 static audio_client_t g_micbias;
 AUDIO_API void micbias_power_on()
 {
@@ -1400,6 +1410,83 @@ AUDIO_API void micbias_power_off()
     audio_close(g_micbias);
     g_micbias = NULL;
 }
+
+#else
+
+AUDIO_API void micbias_power_on()
+{
+    int stream;
+    rt_err_t err;
+    audio_server_t *server = get_server();
+    audio_device_speaker_t *my = &server->device_speaker_private;
+    LOG_I("%s 0x%p", __FUNCTION__, my->audcodec_dev);
+    if (!my->audprc_dev)
+    {
+        my->audprc_dev = rt_device_find(AUDIO_SPEAKER_NAME);
+        RT_ASSERT(my->audprc_dev);
+        {
+            err = rt_device_open(my->audprc_dev, RT_DEVICE_FLAG_RDWR);
+            RT_ASSERT(RT_EOK == err);
+        }
+
+        my->audcodec_dev = rt_device_find(AUDIO_PRC_CODEC_NAME);
+        RT_ASSERT(my->audcodec_dev);
+        err = rt_device_open(my->audcodec_dev, RT_DEVICE_FLAG_WRONLY);
+        RT_ASSERT(RT_EOK == err);
+    }
+    {
+        rt_device_set_rx_indicate(my->audprc_dev, micbias_rx_ind);
+        //config ADC
+        struct rt_audio_caps caps;
+        int stream;
+        rt_device_control(my->audcodec_dev, AUDIO_CTL_SETINPUT, (void *)AUDPRC_RX_FROM_CODEC);
+        caps.main_type = AUDIO_TYPE_INPUT;
+        caps.sub_type = 1 << HAL_AUDCODEC_ADC_CH0;
+        caps.udata.config.channels   = 1;
+        caps.udata.config.samplerate = 8000;
+        caps.udata.config.samplefmt = 16;
+        rt_device_control(my->audcodec_dev, AUDIO_CTL_CONFIGURE, &caps);
+
+        LOG_I("codec input parameter:sub_type=%d channels %d, rate %d, bits %d", caps.sub_type, caps.udata.config.channels,
+              caps.udata.config.samplerate, caps.udata.config.samplefmt);
+
+        rt_device_control(my->audprc_dev, AUDIO_CTL_SETINPUT, (void *)AUDPRC_RX_FROM_CODEC);
+
+        caps.main_type = AUDIO_TYPE_INPUT;
+        caps.sub_type = HAL_AUDPRC_RX_CH0 - HAL_AUDPRC_RX_CH0;
+        caps.udata.config.channels   = 1;
+        caps.udata.config.samplerate = 8000;
+        caps.udata.config.samplefmt = 16;
+        LOG_I("mic input:rx channel %d, channels %d, rate %d, bitwidth %d", 0, caps.udata.config.channels,
+              caps.udata.config.samplerate, caps.udata.config.samplefmt);
+        rt_device_control(my->audprc_dev, AUDIO_CTL_CONFIGURE, &caps);
+        stream = AUDIO_STREAM_RECORD | ((1 << HAL_AUDCODEC_ADC_CH0) << 8);
+        rt_device_control(my->audcodec_dev, AUDIO_CTL_START, &stream);
+        stream = AUDIO_STREAM_RECORD | ((1 << HAL_AUDPRC_RX_CH0) << 8);
+        rt_device_control(my->audprc_dev, AUDIO_CTL_START, &stream);
+        HAL_NVIC_DisableIRQ(AUDPRC_RX0_DMA_IRQ);
+    }
+}
+
+AUDIO_API void micbias_power_off()
+{
+    audio_server_t *server = get_server();
+    audio_device_speaker_t *my = &server->device_speaker_private;
+    int stream_audcodec = AUDIO_STREAM_RECORD | ((1 << HAL_AUDCODEC_ADC_CH0) << 8);
+    int stream_audprc = AUDIO_STREAM_RECORD | ((1 << HAL_AUDPRC_RX_CH0) << 8);
+    LOG_I("%s 0x%p", __FUNCTION__, my->audprc_dev);
+    if (my->audprc_dev)
+    {
+        rt_device_control(my->audcodec_dev, AUDIO_CTL_STOP, &stream_audcodec);
+        rt_device_control(my->audprc_dev, AUDIO_CTL_STOP, &stream_audprc);
+        bf0_disable_pll();
+        rt_device_close(my->audcodec_dev);
+        rt_device_close(my->audprc_dev);
+        my->audcodec_dev = NULL;
+        my->audprc_dev = NULL;
+    }
+}
+#endif
 
 static int audio_device_speaker_open(void *user_data, audio_device_input_callback callback)
 {
@@ -1487,7 +1574,7 @@ static int audio_device_speaker_open(void *user_data, audio_device_input_callbac
         my->rx_channels    = client->parameter.read_channnel_num;
         my->rx_samplerate  = client->parameter.read_samplerate;
         RT_ASSERT(!my->rx_data_tmp);
-        my->rx_data_tmp = audio_mem_malloc(CODEC_DATA_UNIT_LEN);
+        my->rx_data_tmp = audio_mem_malloc(CODEC_DATA_UNIT_LEN * 2); //may stereo pmd
         RT_ASSERT(my->rx_data_tmp);
 
     }
