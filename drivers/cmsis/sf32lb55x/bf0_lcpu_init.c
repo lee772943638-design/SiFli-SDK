@@ -50,13 +50,14 @@ static void lcpu_ble_patch_install()
     if (rev_id == HAL_CHIP_REV_ID_A3)
         lcpu_patch_install_a3();
     else
+        lcpu_patch_install();
 #else
     lcpu_patch_install();
 #endif
 
 
-        if (g_lcpu_rf_cal_disable == 0)
-            bt_rf_cal();
+    if (g_lcpu_rf_cal_disable == 0)
+        bt_rf_cal();
 
     adc_resume();
 }
