@@ -61,11 +61,60 @@ else
 fi
 
 if [ -d "${BUILD_DIR}" ]; then
-    mkdir -p "${ROOT_DIR}/artifacts/${LOG_NAME}"
-    find "${BUILD_DIR}" -name "*.bin" -o -name "*.hex" -o -name "*.elf" -o -name "*.axf" -o -name "*.map" | while read file; do
-        cp "$file" "${ROOT_DIR}/artifacts/${LOG_NAME}/" 2>/dev/null || true
+    ARTIFACTS_DIR="${ROOT_DIR}/artifacts/${LOG_NAME}"
+    mkdir -p "${ARTIFACTS_DIR}"
+    
+    echo "📦 开始收集构建产物，保留目录结构..."
+    echo "   源目录: ${BUILD_DIR}"
+    echo "   目标目录: ${ARTIFACTS_DIR}"
+    
+    # 定义要收集的文件扩展名（包括用户要求的.bat, .sh, .json）
+    FILE_PATTERNS=("*.bin" "*.hex" "*.elf" "*.axf" "*.map" "*.bat" "*.sh" "*.json")
+    
+    # 计数器
+    total_files=0
+    
+    # 遍历每个文件模式，保留目录结构
+    for pattern in "${FILE_PATTERNS[@]}"; do
+        # 使用find查找文件，保持相对路径
+        find "${BUILD_DIR}" -name "${pattern}" -type f | while read -r source_file; do
+            # 计算相对于BUILD_DIR的路径
+            relative_path="${source_file#${BUILD_DIR}/}"
+            target_file="${ARTIFACTS_DIR}/${relative_path}"
+            target_dir="$(dirname "${target_file}")"
+            
+            # 创建目标目录
+            mkdir -p "${target_dir}"
+            
+            # 复制文件，保持时间戳
+            if cp -p "${source_file}" "${target_file}" 2>/dev/null; then
+                echo "  ✓ ${relative_path}"
+                total_files=$((total_files + 1))
+            else
+                echo "  ✗ 复制失败: ${relative_path}"
+            fi
+        done
     done
-    echo "✅ 构建产物已收集到 artifacts/${LOG_NAME}/"
+    
+    # 统计实际复制的文件数量
+    actual_files=$(find "${ARTIFACTS_DIR}" -type f | wc -l | tr -d ' ')
+    
+    if [ "${actual_files}" -gt 0 ]; then
+        echo "✅ 构建产物收集完成!"
+        echo "   📊 共收集 ${actual_files} 个文件到 artifacts/${LOG_NAME}/"
+        echo "   📁 目录结构已保留"
+        
+        # 显示收集到的文件类型统计
+        echo "   📋 文件类型统计:"
+        for pattern in "${FILE_PATTERNS[@]}"; do
+            count=$(find "${ARTIFACTS_DIR}" -name "${pattern}" -type f | wc -l | tr -d ' ')
+            if [ "${count}" -gt 0 ]; then
+                echo "      ${pattern}: ${count} 个"
+            fi
+        done
+    else
+        echo "⚠️  未找到匹配的构建产物文件"
+    fi
 else
     echo "⚠️  构建产物目录不存在: ${BUILD_DIR}"
 fi
