@@ -13,14 +13,13 @@ Memory type naming rules:
 - A: Indicates the board uses SPI NAND memory, followed by the memory capacity in MB
 - N: Indicates the board uses SPI NOR memory, followed by the memory capacity in MB
 - R: Indicates the board uses SPI PSRAM memory, followed by the memory capacity in MB
+- E: Indicates the board uses eMMC memory, followed by the memory capacity in GB
 
 For example, `a128r32n1` indicates 128MB SPI NAND memory, 32MB SPI PSRAM memory, and 1MB SPI NOR memory.
 
-It may also represent specific chip specifications. Unless otherwise specified, external Flash is `16MB`. For example, for the 52 series, `52b` represents the SF32LB52B chip with built-in 4MB SPI NOR memory; `52j` represents the SF32LB52J chip with built-in 8MB SPI PSRAM memory and external 16MB SPI NOR memory.
-
 Some typical examples:
 
-- `sf32lb52-nano_52b`: Indicates the Nano version development board of model SF32LB52, using 4MB SPI NOR memory.
+- `sf32lb52-nano_n4`: Indicates the Nano version development board of model SF32LB52, using 4MB SPI NOR memory.
 - `sf32lb56-lcd_a128r12n1`: Indicates the LCD version development board of model SF32LB56, using 128MB SPI NAND memory, 12MB SPI PSRAM memory, and 1MB SPI NOR memory.
 
 ```{image} ../../assets/folder.png
@@ -91,8 +90,8 @@ Abbreviation |  Model                    |    Board Directory   |
 523-HDK      | EH-SF32LB52X(523)         |   eh-lb523          | 
 525-HDK      | EH-SF32LB52X(525)         |   eh-lb525          | 
 6500-HDK     | EH-SF32LB52X(6500)        |   eh-lb6500         | 
-NANO-52b     | Nano(52b)                 |   sf32lb52-nano_52b | 
-NANO-52j     | Nano(52j)                 |   sf32lb52-nano_52j | 
+NANO-52b     | Nano(52b)                 |   sf32lb52-nano_n4 | 
+NANO-52j     | Nano(52j)                 |   sf32lb52-nano_n16r16 | 
 ULP(Huangshan Pi) | ULP(525)            |   sf32lb52-ulp      | 
 LCD-525 | SF32LB52-DevKit-LCD(525) |   [sf32lb52-lcd_n16r8](boards/sf32lb52-lcd_n16r8/doc/index.md)    |
 LCD-52b | SF32LB52-DevKit-LCD(52b) |   [sf32lb52-lcd_52d](boards/sf32lb52-lcd_52d/doc/index.md)    |
@@ -104,8 +103,8 @@ LCD-52b | SF32LB52-DevKit-LCD(52b) |   [sf32lb52-lcd_52d](boards/sf32lb52-lcd_52
 
 boards/ec-lb587/doc/index
 boards/ec-lb587_a2/doc/index
-boards/sf32lb52-core_52j_e8/doc/index
-boards/sf32lb52-core_52j_n16/doc/index
+boards/sf32lb52-core_e8r16/doc/index
+boards/sf32lb52-core_n16r16/doc/index
 boards/sf32lb52-lcd_52d/doc/index
 boards/sf32lb52-lcd_n16r8/doc/index.
 boards/sf32lb52-lcd_n16r8_jdi/doc/index
