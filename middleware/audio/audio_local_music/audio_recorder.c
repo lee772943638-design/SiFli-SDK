@@ -343,7 +343,7 @@ static void audio_record_entry(void *parameter)
             if (evt & AUDIO_REC_CLOSE_EVENT)
             {
                 audio_record_close(&recorder);
-                continue;
+                break;
             }
 
             if (evt & AUDIO_REC_PCM_EVENT)
@@ -453,14 +453,16 @@ static void record(uint8_t argc, char **argv)
         record_seconds++;
         LOG_I("recording %ds.\n", record_seconds);
     }
+
+    /* stop record*/
     if (rec->state == REC_STATE_RUNNING)
         rt_event_send(rec_event, AUDIO_REC_CLOSE_EVENT);
 
-    while (rec->state == REC_STATE_RUNNING)
+    while (rt_thread_find("recorder"))
     {
-        rt_thread_mdelay(5);
+        LOG_I("wait thread %s exit", recorder);
+        rt_thread_mdelay(100);
     }
-    rt_thread_delete(tid);
     rt_event_delete(rec_event);
     LOG_I("recording end.\n");
 }
