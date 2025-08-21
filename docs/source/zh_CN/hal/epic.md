@@ -104,170 +104,27 @@ void EPIC_IRQHandler(void)
 
 ```
 
-{c:func}`HAL_EPIC_Rotate_IT` 用于中断模式的混叠、旋转和缩放操作， {c:func}`HAL_EPIC_BlendStart_IT` 用于中断模式的混叠操作，需要在中断服务程序中调用 {c:func}`HAL_EPIC_IRQHandler` 处理中断。
-@note {c:func}`HAL_EPIC_Rotate_IT` 实现了所有 {c:func}`HAL_EPIC_BlendStart_IT` 的功能，对于只是混叠的场景，建议使用 {c:func}`HAL_EPIC_BlendStart_IT` ，因为它的叠图吞吐率更高
+{c:func}`HAL_EPIC_BlendStartEx_IT` 用于中断模式的填充、混叠、旋转和缩放操作， 需要在中断服务程序中调用 {c:func}`HAL_EPIC_IRQHandler` 处理中断。
+
 
 ### 混叠示例
-如图1所示，示例`blend_img_1`与`blend_img_2`中，前景图所在区域的坐标为(10, 20)~(59,79)，背景图所在区域的坐标为(0,0)~(99,99), 输出区域坐标为(5,10)~(44,59)，所有坐标均为一个坐标系中的数值，体现三个区域的相对位置关系，
-前景图以39%%的透明度与背景混叠，混叠后(5,10)~(44,59)区域的颜色值被顺序写入到输出buffer，其中与前景重叠的部分（画叉的部分，即区域[10,20]~[44,59]）为混叠后的颜色，非重叠部分则是背景图中的颜色。
-需要注意的是所有的数据buffer均为对应区域左上角像素的存放地址，例如fg_img.data指向前景图的坐标(10,20)所在像素的颜色值，outout_img.data指向输出区域的左上角像素，即(5,10)的颜色值。
+如图1所示，示例`blend_img`中将一个图片的一部分叠到一个背景上：
+1. 前景图所在区域的坐标为(10, 20)~(59,79)，背景图所在区域的坐标为(0,0)~(99,99), 混叠区域坐标为(5,10)~(44,59)，所有坐标均为一个坐标系中的数值
+2. 前景图以100的透明度与背景混叠
 
-![Figure 1: Blending](../../assets/epic_blend.png)
+混叠后(5,10)~(44,59)区域的颜色值被顺序写入到背景buffer，其中与前景重叠的部分（画叉的部分，即区域[10,20]~[44,59]）为混叠后的颜色，非重叠部分则是保持背景图中本来的颜色。
 
-#### 背景图buffer与输出buffer不同 
-
-##### 使用HAL_EPIC_Rotate_IT
-```c
-void epic_cplt_callback(EPIC_HandleTypeDef *epic)
-{
-    /* release the semaphore to indicate epic operation done */
-    sema_release(epic_sema);
-}
-
-/* blend the foreground with background image using 100 opacity (0 is transparent, 255 is opaque)
- * output specified blended region to another buffer.
- * 
- */
-void blend_img_1(void)
-{
-    EPIC_BlendingDataType fg_img;
-    EPIC_BlendingDataType bg_img;
-    EPIC_BlendingDataType output_img;
-    EPIC_TransformCfgTypeDef trans_cfg;
-    HAL_StatusTypeDef ret;     
-    
-    /* foreground image, its coordinate (10,20)~(59,79) , buffer size is 50*60 */
-    HAL_EPIC_BlendDataInit(&fg_img);
-    fg_img.data = fg_img_buf;
-    fg_img.x_offset = 10;
-    fg_img.y_offset = 20;
-    /* blending area width */
-    fg_img.width = 50;
-    /* blending area height */
-    fg_img.height = 60;
-    /* image width, it can be different from fg_img.width */
-    fg_img.total_width = 50;
-    fg_img.color_mode = EPIC_COLOR_RGB565;
-    fg_img.color_en = false;
-    
-    /* background image, its coordinate (0,0)~(99,99), buffer size is 100*100 */
-    HAL_EPIC_BlendDataInit(&bg_img);
-    bg_img.data = bg_img_buf;
-    bg_img.x_offset = 0;
-    bg_img.y_offset = 0;
-    bg_img.width = 100;
-    bg_img.height = 100;
-    bg_img.total_width = 100;
-    bg_img.color_mode = EPIC_COLOR_RGB565;
-    bg_img.color_en = false;
-    
-    /* output image, its coordinate (5,10)~(44,59), buffer size is 40*50 */
-    HAL_EPIC_BlendDataInit(&output_img);
-    output_img.data = output_img_buf;
-    output_img.x_offset = 5;
-    output_img.y_offset = 10;
-    output_img.width = 40;
-    output_img.height = 50;
-    output_img.total_width = 40;
-    output_img.color_mode = EPIC_COLOR_RGB565;
-    output_img.color_en = false;
-    
-    /* set complete callback */
-    epic_handle.XferCpltCallback = epic_cplt_callback;
-    
-    /* no rotation and scaling, opacity 100 
-     * start EPIC in interrupt mode
-     */
-    HAL_EPIC_RotDataInit(&trans_cfg);
-
-    
-    ret = HAL_EPIC_Rotate_IT(&epic_handle, &trans_cfg, &fg_img, &bg_img, &output_img, 100);
-    /* check ret value if any error happens */
-    ...
-    /* wait for completion */
-    sema_take(epic_sema);
-}
-
-```
-
-##### 使用HAL_EPIC_BlendStart_IT
-```c
-void epic_cplt_callback(EPIC_HandleTypeDef *epic)
-{
-    /* release the semaphore to indicate epic operation done */
-    sema_release(epic_sema);
-}
-
-/* blend the foreground with background image using 100 opacity (0 is transparent, 255 is opaque)
- * output specified blended region to another buffer.
- * 
- */
-void blend_img_1(void)
-{
-    EPIC_BlendingDataType fg_img;
-    EPIC_BlendingDataType bg_img;
-    EPIC_BlendingDataType output_img;
-    HAL_StatusTypeDef ret;     
-    
-    /* foreground image, its coordinate (10,20)~(59,79) , buffer size is 50*60 */
-    HAL_EPIC_BlendDataInit(&fg_img);
-    fg_img.data = fg_img_buf;
-    fg_img.x_offset = 10;
-    fg_img.y_offset = 20;
-    /* blending area width */
-    fg_img.width = 50;
-    /* blending area height */
-    fg_img.height = 60;
-    /* image width, it can be different from fg_img.width */
-    fg_img.total_width = 50;
-    fg_img.color_mode = EPIC_COLOR_RGB565;
-    fg_img.color_en = false;
-    
-    /* background image, its coordinate (0,0)~(99,99), buffer size is 100*100 */
-    HAL_EPIC_BlendDataInit(&bg_img);
-    bg_img.data = bg_img_buf;
-    bg_img.x_offset = 0;
-    bg_img.y_offset = 0;
-    bg_img.width = 100;
-    bg_img.height = 100;
-    bg_img.total_width = 100;
-    bg_img.color_mode = EPIC_COLOR_RGB565;
-    bg_img.color_en = false;
-    
-    /* output image, its coordinate (5,10)~(44,59), buffer size is 40*50 */
-    HAL_EPIC_BlendDataInit(&output_img);
-    output_img.data = output_img_buf;
-    output_img.x_offset = 5;
-    output_img.y_offset = 10;
-    output_img.width = 40;
-    output_img.height = 50;
-    output_img.total_width = 40;
-    output_img.color_mode = EPIC_COLOR_RGB565;
-    output_img.color_en = false;
-    
-    /* set complete callback */
-    epic_handle.XferCpltCallback = epic_cplt_callback;
-    
-    ret = HAL_EPIC_BlendStart_IT(&epic_handle, &fg_img, &bg_img, &output_img, 100);
-    /* check ret value if any error happens */
-    ...    
-    /* wait for completion */
-    sema_take(epic_sema);
-}
-
-```
-
-
-#### 背景图buffer与输出buffer相同
-
-`blend_img_2`展示了输出buffer复用背景图buffer的场景，这也是最常使用的，即frame buffer作为背景图buffer和输出buffer，
-这种情况下背景图buffer中的(10,20)~(44,59)区域所在的颜色值会被修改为混叠后的颜色，其他位置的颜色值保持不变，
-需要注意output_img.width和output_img.total_width的设置，output_img.width表示输出区域的宽度，即44-5+1=40，
+需要注意的是所有的数据buffer均为对应区域左上角像素的存放地址，例如p_fg_img->data指向前景图的坐标(10,20)所在像素的颜色值，outout_img.data指向输出区域的左上角像素，即(5,10)的颜色值。
+output_img.width和output_img.total_width的设置，output_img.width表示输出区域的宽度，即44-5+1=40，
 但output_img.total_width表示输出buffer的宽度，因为输出buffer对应的图形大小为100*100，所以output_img.total_width应设为100，
 这样EPIC在写完一行40个像素的数据后，会跳过余下的60个像素，继续更新下一行的数据。
 fg_img和bg_img的width和total_width也是相同的含义。
 
-##### 使用HAL_EPIC_Rotate_IT
+
+![Figure 1: Blending](../../assets/epic_blend.png)
+
+
+
 
 ```c
 void epic_cplt_callback(EPIC_HandleTypeDef *epic)
@@ -280,40 +137,40 @@ void epic_cplt_callback(EPIC_HandleTypeDef *epic)
  * output buffer is same as background image buffer, usually they're both frame buffer.
  * 
  */
-void blend_img_2(void)
+void blend_img(void)
 {
-    EPIC_BlendingDataType fg_img;
-    EPIC_BlendingDataType bg_img;
-    EPIC_BlendingDataType output_img;
-    EPIC_TransformCfgTypeDef trans_cfg;
+    EPIC_LayerConfigTypeDef layers[2];
+
+    EPIC_LayerConfigTypeDef *p_bg_img = &layers[0];
+    EPIC_LayerConfigTypeDef *p_fg_img = &layers[1];
+    EPIC_LayerConfigTypeDef output_img;
     HAL_StatusTypeDef ret;         
     uint32_t buffer_start_offset;    
     
     /* foreground image, its coordinate (10,20)~(59,79), buffer size is 50*60 */
-    HAL_EPIC_BlendDataInit(&fg_img);
-    fg_img.data = fg_img_buf;
-    fg_img.x_offset = 10;
-    fg_img.y_offset = 20;
-    fg_img.width = 50;
-    fg_img.height = 60;
-    fg_img.total_width = 50;
-    fg_img.color_mode = EPIC_COLOR_RGB565;
-    fg_img.color_en = false;
+    HAL_EPIC_LayerConfigInit(p_fg_img);
+    p_fg_img->data = fg_img_buf;
+    p_fg_img->x_offset = 10;
+    p_fg_img->y_offset = 20;
+    p_fg_img->width = 50;
+    p_fg_img->height = 60;
+    p_fg_img->total_width = 50;
+    p_fg_img->color_mode = EPIC_COLOR_RGB565;
+    p_fg_img->alpha = 100;
     
     /* background image, its coordinate (0,0)~(99,99), buffer size is 100*100 */
-    HAL_EPIC_BlendDataInit(&bg_img);
-    bg_img.data = bg_img_buf;
-    bg_img.x_offset = 0;
-    bg_img.y_offset = 0;
-    bg_img.width = 100;
-    bg_img.height = 100;
-    bg_img.total_width = 100;
-    bg_img.color_mode = EPIC_COLOR_RGB565;
-    bg_img.color_en = false;
+    HAL_EPIC_LayerConfigInit(p_bg_img);
+    p_bg_img->data = bg_img_buf;
+    p_bg_img->x_offset = 0;
+    p_bg_img->y_offset = 0;
+    p_bg_img->width = 100;
+    p_bg_img->height = 100;
+    p_bg_img->total_width = 100;
+    p_bg_img->color_mode = EPIC_COLOR_RGB565;
     
     /* output image, share the same buffer as bg_img_buf,
        output area is (5,10)~(44,59), buffer size is 100*100 */
-    HAL_EPIC_BlendDataInit(&output_img);
+    HAL_EPIC_LayerConfigInit(&output_img);
     /* topleft pixel is (5, 10), skip (10*100+5) pixels */
     buffer_start_offset = (10 - 0) * 100 * 2 + (5 - 0) * 2;
     output_img.data = (uint8_t *)((uint32_t)bg_img_buf + buffer_start_offset);
@@ -327,90 +184,10 @@ void blend_img_2(void)
     /* output buffer width, it's different from output_img.width */
     output_img.total_width = 100;
     output_img.color_mode = EPIC_COLOR_RGB565;
-    output_img.color_en = false;
     
-    /* set complete callback */
+    /* set complete callback, and start EPIC */
     epic_handle.XferCpltCallback = epic_cplt_callback;
-
-    /* no rotation and scaling, opacity 100 
-     * start EPIC in interrupt mode
-     */
-    HAL_EPIC_RotDataInit(&trans_cfg);
-
-    
-    ret = HAL_EPIC_Rotate_IT(&epic_handle, &trans_cfg, &fg_img, &bg_img, &output_img, 100);
-    /* check ret value if any error happens */
-    ...    
-    /* wait for completion */
-    sema_take(epic_sema);
-}
-
-```
-
-##### 使用HAL_EPIC_BlendStart_IT
-```c
-void epic_cplt_callback(EPIC_HandleTypeDef *epic)
-{
-    /* release the semaphore to indicate epic operation done */
-    sema_release(epic_sema);
-}
-
-/* blend the foreground with background image using 100 opacity (0 is transparent, 255 is opaque)
- * output buffer is same as background image buffer, usually they're both frame buffer.
- * 
- */
-void blend_img_2(void)
-{
-    EPIC_BlendingDataType fg_img;
-    EPIC_BlendingDataType bg_img;
-    EPIC_BlendingDataType output_img;
-    HAL_StatusTypeDef ret;         
-    uint32_t buffer_start_offset;    
-    
-    /* foreground image, its coordinate (10,20)~(59,79), buffer size is 50*60 */
-    HAL_EPIC_BlendDataInit(&fg_img);
-    fg_img.data = fg_img_buf;
-    fg_img.x_offset = 10;
-    fg_img.y_offset = 20;
-    fg_img.width = 50;
-    fg_img.height = 60;
-    fg_img.total_width = 50;
-    fg_img.color_mode = EPIC_COLOR_RGB565;
-    fg_img.color_en = false;
-    
-    /* background image, its coordinate (0,0)~(99,99), buffer size is 100*100 */
-    HAL_EPIC_BlendDataInit(&bg_img);
-    bg_img.data = bg_img_buf;
-    bg_img.x_offset = 0;
-    bg_img.y_offset = 0;
-    bg_img.width = 100;
-    bg_img.height = 100;
-    bg_img.total_width = 100;
-    bg_img.color_mode = EPIC_COLOR_RGB565;
-    bg_img.color_en = false;
-    
-    /* output image, share the same buffer as bg_img_buf,
-       output area is (5,10)~(44,59), buffer size is 100*100 */
-    HAL_EPIC_BlendDataInit(&output_img);
-    /* topleft pixel is (5, 10), skip (10*100+5) pixels */
-    buffer_start_offset = (10 - 0) * 100 * 2 + (5 - 0) * 2;
-    output_img.data = (uint8_t *)((uint32_t)bg_img_buf + buffer_start_offset);
-    /* output area topleft coordinate */
-    output_img.x_offset = 5;
-    output_img.y_offset = 10;
-    /* output area width */
-    output_img.width = 40;
-    /* output area height */
-    output_img.height = 50;
-    /* output buffer width, it's different from output_img.width */
-    output_img.total_width = 100;
-    output_img.color_mode = EPIC_COLOR_RGB565;
-    output_img.color_en = false;
-    
-    /* set complete callback */
-    epic_handle.XferCpltCallback = epic_cplt_callback;
-
-    ret = HAL_EPIC_BlendStart_IT(&epic_handle, &fg_img, &bg_img, &output_img, 100);
+    ret = HAL_EPIC_BlendStartEx_IT(&epic_handle, &layers, 2, &output_img);
     /* check ret value if any error happens */
     ...
     /* wait for completion */
@@ -435,36 +212,44 @@ void blend_img_2(void)
  */
 void rotate_img(void)
 {
-    EPIC_BlendingDataType fg_img;
-    EPIC_BlendingDataType bg_img;
-    EPIC_BlendingDataType output_img;
-    EPIC_TransformCfgTypeDef trans_cfg;
-    HAL_StatusTypeDef ret;         
+    EPIC_LayerConfigTypeDef layers[2];
+
+    EPIC_LayerConfigTypeDef *p_bg_img = &layers[0];
+    EPIC_LayerConfigTypeDef *p_fg_img = &layers[1];
+
+    EPIC_LayerConfigTypeDef output_img;
+    HAL_StatusTypeDef ret;
     
     /* foreground image, its coordinate (10,20)~(59,79) before rotation, buffer size is 50*60 */
-    HAL_EPIC_BlendDataInit(&fg_img);
-    fg_img.data = fg_img_buf;
-    fg_img.x_offset = 10;
-    fg_img.y_offset = 20;
-    fg_img.width = 50;
-    fg_img.height = 60;
-    fg_img.total_width = 50;
-    fg_img.color_mode = EPIC_COLOR_RGB565;
-    fg_img.color_en = false;
-    
+    HAL_EPIC_LayerConfigInit(p_fg_img);
+    p_fg_img->data = fg_img_buf;
+    p_fg_img->x_offset = 10;
+    p_fg_img->y_offset = 20;
+    p_fg_img->width = 50;
+    p_fg_img->height = 60;
+    p_fg_img->total_width = 50;
+    p_fg_img->color_mode = EPIC_COLOR_RGB565;
+    p_fg_img->alpha = 100;
+    /* foreground image is rotated by 30 degree around its center */
+    p_fg_img->transform_cfg.angle = 300;
+    p_fg_img->transform_cfg.pivot_x = p_fg_img->width / 2;
+    p_fg_img->transform_cfg.pivot_y = p_fg_img->height / 2;
+    p_fg_img->transform_cfg.scale_x = EPIC_INPUT_SCALE_NONE;
+    p_fg_img->transform_cfg.scale_y = EPIC_INPUT_SCALE_NONE;    
+
+
     /* background image, its coordinate (0,0)~(99,99), buffer size is 100*100 */
-    HAL_EPIC_BlendDataInit(&bg_img);
-    bg_img.data = bg_img_buf;
-    bg_img.x_offset = 0;
-    bg_img.y_offset = 0;
-    bg_img.width = 100;
-    bg_img.height = 100;
-    bg_img.total_width = 100;
-    bg_img.color_mode = EPIC_COLOR_RGB565;
-    bg_img.color_en = false;
+    HAL_EPIC_LayerConfigInit(p_bg_img);
+    p_bg_img->data = bg_img_buf;
+    p_bg_img->x_offset = 0;
+    p_bg_img->y_offset = 0;
+    p_bg_img->width = 100;
+    p_bg_img->height = 100;
+    p_bg_img->total_width = 100;
+    p_bg_img->color_mode = EPIC_COLOR_RGB565;
     
     /* output image, its coordinate (0,0)~(99,99), share same buffer as background image */
-    HAL_EPIC_BlendDataInit(&output_img);
+    HAL_EPIC_LayerConfigInit(&output_img);
     output_img.data = bg_img_buf;
     output_img.x_offset = 0;
     output_img.y_offset = 0;
@@ -472,23 +257,11 @@ void rotate_img(void)
     output_img.height = 100;
     output_img.total_width = 100;
     output_img.color_mode = EPIC_COLOR_RGB565;
-    output_img.color_en = false;
     
+    
+    /* set complete callback, and start EPIC */
     epic_handle.XferCpltCallback = epic_cplt_callback;
-    
-    /* foreground image is rotated by 30 degree around its center */
-    HAL_EPIC_RotDataInit(&trans_cfg);
-    trans_cfg.angle = 300;
-    trans_cfg.pivot_x = fg_img.width / 2;
-    trans_cfg.pivot_y = fg_img.height / 2;
-    trans_cfg.scale_x = 1000;
-    trans_cfg.scale_y = 1000;    
-    
-    
-    /* no scaling, opacity 100 
-     * start EPIC in interrupt mode
-     */
-    ret = HAL_EPIC_Rotate_IT(&epic_handle, &trans_cfg, &fg_img, &bg_img, &output_img, 100);
+    ret = HAL_EPIC_BlendStartEx_IT(&epic_handle, &layers, 2, &output_img);
     /* check ret value if any error happens */
     ...
     /* wait for completion */
@@ -512,36 +285,44 @@ void rotate_img(void)
  */
 void scale_down_img(void)
 {
-    EPIC_BlendingDataType fg_img;
-    EPIC_BlendingDataType bg_img;
-    EPIC_BlendingDataType output_img;
-    EPIC_TransformCfgTypeDef trans_cfg;
-    HAL_StatusTypeDef ret;         
+    EPIC_LayerConfigTypeDef layers[2];
+
+    EPIC_LayerConfigTypeDef *p_bg_img = &layers[0];
+    EPIC_LayerConfigTypeDef *p_fg_img = &layers[1];
+
+    EPIC_LayerConfigTypeDef output_img;
+    HAL_StatusTypeDef ret;
     
     /* foreground image, its coordinate (10,20)~(59,79) before scaling */
-    HAL_EPIC_BlendDataInit(&fg_img);
-    fg_img.data = fg_img_buf;
-    fg_img.x_offset = 10;
-    fg_img.y_offset = 20;
-    fg_img.width = 50;
-    fg_img.height = 60;
-    fg_img.total_width = 50;
-    fg_img.color_mode = EPIC_COLOR_RGB565;
-    fg_img.color_en = false;
-    
+    HAL_EPIC_LayerConfigInit(p_fg_img);
+    p_fg_img->data = fg_img_buf;
+    p_fg_img->x_offset = 10;
+    p_fg_img->y_offset = 20;
+    p_fg_img->width = 50;
+    p_fg_img->height = 60;
+    p_fg_img->total_width = 50;
+    p_fg_img->color_mode = EPIC_COLOR_RGB565;
+    p_fg_img->alpha = 100;
+    /* no rotation, both X and Y direction are scaled down by 1.4, 
+       the image center is in the same position after scaling */
+    p_fg_img->transform_cfg.pivot_x = p_fg_img->width / 2;
+    p_fg_img->transform_cfg.pivot_y = p_fg_img->height / 2;
+    p_fg_img->transform_cfg.scale_x = (EPIC_INPUT_SCALE_NONE*14)/10;
+    p_fg_img->transform_cfg.scale_y = p_fg_img->transform_cfg.scale_x;       
+
+
     /* background image, its coordinate (0,0)~(99,99) */
-    HAL_EPIC_BlendDataInit(&bg_img);
-    bg_img.data = bg_img_buf;
-    bg_img.x_offset = 0;
-    bg_img.y_offset = 0;
-    bg_img.width = 100;
-    bg_img.height = 100;
-    bg_img.total_width = 100;
-    bg_img.color_mode = EPIC_COLOR_RGB565;
-    bg_img.color_en = false;
+    HAL_EPIC_LayerConfigInit(p_bg_img);
+    p_bg_img->data = bg_img_buf;
+    p_bg_img->x_offset = 0;
+    p_bg_img->y_offset = 0;
+    p_bg_img->width = 100;
+    p_bg_img->height = 100;
+    p_bg_img->total_width = 100;
+    p_bg_img->color_mode = EPIC_COLOR_RGB565;
     
     /* output image, its coordinate (0,0)~(99,99), share same buffer as background image */
-    HAL_EPIC_BlendDataInit(&output_img);
+    HAL_EPIC_LayerConfigInit(&output_img);
     output_img.data = bg_img_buf;
     output_img.x_offset = 0;
     output_img.y_offset = 0;
@@ -549,22 +330,11 @@ void scale_down_img(void)
     output_img.height = 100;
     output_img.total_width = 100;
     output_img.color_mode = EPIC_COLOR_RGB565;
-    output_img.color_en = false;
-    
-    epic_handle.XferCpltCallback = epic_cplt_callback;
 
-    /* no rotation, both X and Y direction are scaled down by 1.4, 
-       the image center is in the same position after scaling */
-    HAL_EPIC_RotDataInit(&trans_cfg);
-    trans_cfg.pivot_x = fg_img.width / 2;
-    trans_cfg.pivot_y = fg_img.height / 2;
-    trans_cfg.scale_x = 1400;
-    trans_cfg.scale_y = 1400;       
-   
-    /* opacity 100 
-     * start EPIC in interrupt mode
-     */
-    ret = HAL_EPIC_Rotate_IT(&epic_handle, &trans_cfg, &fg_img, &bg_img, &output_img, 100);
+    
+    /* set complete callback, and start EPIC */
+    epic_handle.XferCpltCallback = epic_cplt_callback;
+    ret = HAL_EPIC_BlendStartEx_IT(&epic_handle, &layers, 2, &output_img);
     /* check ret value if any error happens */
     ...
     /* wait for completion */
@@ -572,7 +342,7 @@ void scale_down_img(void)
 }
 ```
 
-### 颜色填充示例
+### 纯色填充示例
 一个大小为100*90的buffer，在其(20,10)~(39, 49)区域填充颜色RGB(99,107,123)，配置的颜色值为RGB888格式，填充后的颜色格式为RGB565，硬件会作颜色格式转换。
 透明度为100，255表示不透明，0表示透明。
 因为填充的第一个像素位置为(20,10)，相对buffer的首地址有偏移，配置的起始地址应为偏移后的地址，total_width为buffer的总宽度，即100，width为填充区域的宽度，即(39-20+1)=20,
@@ -605,11 +375,34 @@ void fill_color(void)
     /* opacity is 100 */
     param.alpha = 100;
 
-    /* fill in polling mode */
-    ret = HAL_EPIC_FillStart(&epic_handle, &param);
+    
     /* check ret if any error happens */
+    /* set complete callback, and start EPIC */
+    epic_handle.XferCpltCallback = epic_cplt_callback;
+    ret = HAL_EPIC_FillStart_IT(&epic_handle, &param);
+    /* check ret value if any error happens */
+    ...
+    /* wait for completion */
+    sema_take(epic_sema);
 }
 ```
+
+### 渐变色填充
+渐变色填充支持设置4个脚的颜色，然后中间均匀插值，使用`HAL_EPIC_FillGrad_IT`接口。
+
+### 连续混叠
+连续混叠接口一般用于相同渲染属性的小图片的混叠，比如连续叠多个字（字的颜色、格式等都相同，只是坐标、高宽、数据地址发生变化）。
+这组接口的特点是功能简单、代码量小只有CPU polling模式，
+
+使用时需要依次调用：
+1. `HAL_EPIC_ContBlendStart`  -- 第一次启动连续混叠
+2. `HAL_EPIC_ContBlendRepeat` -- 除第一次外，之后的N次混叠
+3. `HAL_EPIC_ContBlendStop`   -- 退出连续混叠模式
+
+
+### 特殊变形函数
+在有些场景下需要每混叠一小块区域就改变一下前景的参数，`HAL_EPIC_TransStart`接口就提供了这样一个帮助函数, 它提供了3个参数`hor_path`,`ver_path`,`user_data`,通过这3组参数来控制输出区域的步进，同时提供了改变前景图片参数的可能。
+
 
 ## API参考
 [](#hal-epic)

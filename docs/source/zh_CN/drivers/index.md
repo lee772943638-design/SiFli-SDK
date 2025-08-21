@@ -26,7 +26,7 @@ RT-Thread的设备模型介绍：[I/O设备模型][device]
 [I2S Audio设备](audio.md)       |  [I2S](/hal/i2s.md) | 
 [USBD设备](usbd.md)       |  [USBC](/hal/pcd.md) | 
 [SDIO设备](sdio.md)       |   | 
-
+[图形渲染驱动层](epic.md)       |  [EPIC](/hal/epic.md) | 
 
 ```{toctree}
 :hidden:
