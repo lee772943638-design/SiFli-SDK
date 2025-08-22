@@ -27,7 +27,7 @@ Device Driver            | Corresponding HAL           |
 [I2S Audio Device](audio.md) | [I2S](../hal/i2s.md)          | 
 [USBD Device](usbd.md)   | [USBC](../hal/pcd.md)             | 
 [SDIO Device](sdio.md)   |                             |
-
+[EPIC Driver](epic.md)       |  [EPIC](/hal/epic.md) | 
 
 ```{toctree}
 :hidden:

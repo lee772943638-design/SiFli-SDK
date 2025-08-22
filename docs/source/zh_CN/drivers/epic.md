@@ -233,7 +233,17 @@ void main(void)
 ```
 
 ### 具体渲染操作的参数说明
-渲染操作以及`drv_epic_operation.desc`里面关于该渲染操作的数据结构说明：
+本节主要说明结构体`drv_epic_operation`的参数
+
+每个渲染操作公共参数的说明：
+```c
+    drv_epic_op_type_t  op; //渲染操作类型
+    EPIC_AreaTypeDef clip_area;  //渲染限制区域
+    EPIC_LayerConfigTypeDef mask;  //渲染操作的bitmap mask（可选）
+```
+
+
+不同渲染操作数据结构`drv_epic_operation.desc`的参数说明：
 1. 矩形(DRV_EPIC_DRAW_RECT)
 ```c
         struct
