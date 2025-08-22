@@ -9,9 +9,13 @@ Source path: example/storage/flashdb
 
 ## Overview
 <!-- Example introduction -->
+FlashDB is an ultra-lightweight embedded database that focuses on providing data storage solutions for embedded products. FlashDB provides two database modes:
++ Key-value database(KVDB): It is a non-relational database that stores data as a collection of key-value pairs, where the key is used as a unique identifier. 
++ Time Series Database(TSDB): Time Series Database.  
+
 This example demonstrates the configuration and usage of FlashDB, including:
-+ project/nand: KVDB/TSDB configuration and usage on Nand flash (`FDB_USING_FILE_MODE`).
-+ project/nor: KVDB/TSDB configuration and usage on Nor flash (`FDB_USING_FAL_MODE`).
++ project/nand: KVDB/TSDB configuration and usage on Nand flash.
++ project/nor: KVDB/TSDB configuration and usage on Nor flash.
 
 
 ## Example Usage
@@ -24,19 +28,25 @@ Before running this example, you need to prepare:
 
 ### menuconfig Configuration
 
-1. Enable FlashDB:
-![FLASHDB](./assets/mc_flashdb.png)  
+1. Enable FlashDB:  
+![FLASHDB](./assets/mc_flashdb.png)    
      ```{tip}
+     FDB Mode:
+     + `Use FAL Mode` : Using FAL storage mode
+     + `Use File LIBC Mode` : Using file storage mode by LIBC file API, like fopen/fread/fwrte/fclose
+     + `Use File POSIX Mode` : Using file storage mode by POSIX file API, like open/read/write/close  
+
+     In this example:
      + Nand uses `FILE MODE`, operates through file system, `FDB Mode` configured as `PKG_FDB_USING_FILE_POSIX_MODE`.
      + Nor uses `FAL MODE`, operates flash directly, `FDB Mode` configured as `PKG_FDB_USING_FAL_MODE`.
      ```
-2. Configure `FAT` file system (when using `FILE MODE`, `FAL MODE` does not require file system configuration)   
+2. Configure `FAT` file system (when using `FILE MODE`)   
 ![RT_USING_DFS_ELMFAT](./assets/mc_fat.png)
 
      ```{tip}
-     Mount root partition in mnt_init.
+     Mount file system partition in mnt_init. FDB initialization requires specifying a storage path (directory in the file system).
      ```
-3. FAL partition configuration (when using `FAL MODE`, `FILE MODE` does not require independent partition configuration)   
+3. FAL partition configuration (when using `FAL MODE`)   
 + `project/nor/ptab.json`:
      ```c
             {
@@ -63,6 +73,10 @@ Before running this example, you need to prepare:
           ... ...
      }
      ``` 
+
+     ```{tip}
+     FDB initialization requires specifying flash partition name (for example, in this example it is "kvd_tst"/"tsd_tst").
+     ```
 
 ### Compilation and Programming
 Switch to the example project/nand directory and run the scons command to execute compilation:
