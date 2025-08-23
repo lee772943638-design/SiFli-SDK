@@ -74,6 +74,8 @@ html_context = {
         ("English", "", "en"),
         ("中文", "", "zh_CN"),
     ],
+    "portal_url": "https://www.sifli.com",
+    "wiki_url": "https://wiki.sifli.com",
 }
 
 html_logo = '../_static/logo_white.png'
@@ -87,6 +89,7 @@ html_theme_options = {
     # 'style_nav_header_background': 'white',
     # 'logo_only': False,
     "accent_color": "blue",
+    "github_url": "https://github.com/OpenSiFli/SiFli-SDK",
 }
 
 html_css_files = [
