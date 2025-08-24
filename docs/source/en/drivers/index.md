@@ -44,6 +44,7 @@ audio.md
 usbd.md
 sdio.md
 spi_flash.md
+spi_flash_52x.md
 ```
 
 
