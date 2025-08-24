@@ -1149,7 +1149,7 @@ def ConstructFtabDictV2(ftab, mems, img_size):
 
                 ftab_item = ftab[item_name]
                 assert ('max_size' not in ftab_item) or (
-                        max_size == ftab_item['max_size']), "{} max_size must be same, old: 0x{:08X}, new: 0x{:08X}".format(item_name, ftab['max_size'], max_size)
+                        max_size == ftab_item['max_size']), "{} max_size must be same, old: 0x{:08X}, new: 0x{:08X}".format(item_name, ftab_item['max_size'], max_size)
                 ftab_item['max_size'] = max_size
                 if 'app_exec' in region_type_list and ((not ext) or ('1' == ext)):
                     # only first binary need to be described in ftab
