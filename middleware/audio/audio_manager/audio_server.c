@@ -1391,6 +1391,7 @@ static rt_err_t micbias_rx_ind(rt_device_t dev, rt_size_t size)
 static audio_client_t g_micbias;
 AUDIO_API void micbias_power_on()
 {
+    LOG_I("%s", __FUNCTION__);
     audio_parameter_t pa = {0};
     pa.write_bits_per_sample = 16;
     pa.write_channnel_num = 1;
@@ -1407,6 +1408,7 @@ AUDIO_API void micbias_power_on()
 
 AUDIO_API void micbias_power_off()
 {
+    LOG_I("%s", __FUNCTION__);
     audio_close(g_micbias);
     g_micbias = NULL;
 }
@@ -3047,7 +3049,7 @@ static void client_callback_to_user(audio_client_t c)
     if (c && c->callback)
     {
         struct rt_ringbuffer *rb = &c->ring_buf;
-        if (rt_ringbuffer_space_len(rb) < TX_DMA_SIZE)
+        if (rt_ringbuffer_data_len(rb) < TX_DMA_SIZE)
         {
             c->callback(as_callback_cmd_cache_empty, c->user_data, 0);
         }
