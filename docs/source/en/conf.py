@@ -40,7 +40,9 @@ extensions = ["breathe",
               "sphinx_copybutton",
               "sphinx.ext.intersphinx",
               #"sphinx_ext_substitution",
-              "sphinx_design"
+              "sphinx_design",
+              "sphinx_selective_exclude.eager_only",
+              "sphinx_selective_exclude.search_auto_exclude",
               ]
 
 templates_path = ['_templates']
