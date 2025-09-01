@@ -409,7 +409,9 @@ HAL_StatusTypeDef HAL_HCD_HC_SubmitRequest(HCD_HandleTypeDef *hhcd,
     hhcd->hc[ch_num].ep_type  = ep_type;
 
     mbase->faddr = hhcd->hc[ch_num].dev_addr;
-
+#ifdef SF32LB58X
+    hhcd->Instance->swcntl1 = 0x40;
+#endif
     if (direction == 0)     // TX
     {
         if (ep_num == 0)
@@ -537,7 +539,9 @@ HAL_StatusTypeDef HAL_HCD_HC_SubmitRequest(HCD_HandleTypeDef *hhcd,
             epn->txcsr = csr;
 
 #endif
-
+#ifdef SF32LB58X
+            hhcd->Instance->swcntl1 = 0x0;
+#endif
         }
     }
     else//RX
@@ -626,7 +630,9 @@ HAL_StatusTypeDef HAL_HCD_HC_SubmitRequest(HCD_HandleTypeDef *hhcd,
             epn->rxcsr = csr;
             //if(test_pcd) RT_ASSERT(0);
         }
-
+#ifdef SF32LB58X
+        hhcd->Instance->swcntl1 = 0x0;
+#endif
 
     }
     return HAL_OK;
