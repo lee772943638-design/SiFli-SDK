@@ -71,6 +71,12 @@
     #define AUDIO_SERVER_STACK_SIZE         (9 * 1024)
 #endif
 
+#if PKG_USING_ANYKA
+    #define DOWNLINK_STACK_SIZE             3000
+#else
+    #define DOWNLINK_STACK_SIZE             2000
+#endif
+
 #define FADE_VOLUME_STEP        4
 #define FADE_INTERVAL_MS        10
 
@@ -363,7 +369,7 @@ typedef struct
 static int audio_pm_debug = 0;
 static audio_server_t g_server;
 static uint32_t audio_server_stack[AUDIO_SERVER_STACK_SIZE / 4];
-static uint32_t bt_downvoice_stack[500];
+static uint32_t bt_downvoice_stack[DOWNLINK_STACK_SIZE / 4];
 static struct rt_thread audio_server_tid;
 static struct rt_thread bt_downvoice_tid;
 static uint8_t *hfp_dev_input_buf;
