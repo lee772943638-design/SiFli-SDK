@@ -60,6 +60,8 @@ static audio_3a_t g_audio_3a_env =
     .samplerate = 16000,
 };
 
+static uint8_t g_bypass;
+
 static t_vad_instance vad1;
 static struct echo_param_vad vad_param =
 {
@@ -178,6 +180,11 @@ static void my_free(T_pVOID p)
     audio_mem_free(p);
 }
 
+
+void audio_3a_set_bypass(uint8_t is_bypass, uint8_t mic, uint8_t down)
+{
+    g_bypass = is_bypass;
+}
 void audio_3a_open(uint32_t samplerate, uint8_t is_bt_voice, uint8_t disable_uplink_agc)
 {
     audio_3a_t *thiz = &g_audio_3a_env;
@@ -431,7 +438,12 @@ void audio_3a_uplink(uint8_t *fifo, uint16_t fifo_size, uint8_t is_mute, uint8_t
     audio_dump_data(ADUMP_AUDPRC, fifo, fifo_size);
     audio_dump_data(ADUMP_AECM_INPUT1, (uint8_t *)refframe, ANYKA_FRAME_SIZE);
     audio_dump_data(ADUMP_AECM_INPUT2, fifo, ANYKA_FRAME_SIZE);
-
+    if (g_bypass)
+    {
+        is_mute = 0;
+        memcpy(result, fifo, ANYKA_FRAME_SIZE);
+        goto skip_3a_up;
+    }
     // todo: change to use HAL_HPAON_READ_GTIMER();
     uint64_t ts = rt_tick_get() * 1000;
     ret = _SD_Echo_FillDacLoopback(thiz->p_near, (uint8_t *)refframe, ANYKA_FRAME_SIZE, ts, 1);
@@ -458,7 +470,7 @@ skip_3a_up:
 
     if (!is_bt_voice)
     {
-        rt_ringbuffer_get(thiz->rbuf_out, fifo, 320);
+        rt_ringbuffer_get(thiz->rbuf_out, fifo, ANYKA_FRAME_SIZE);
         return;
     }
 
