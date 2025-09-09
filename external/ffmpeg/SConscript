@@ -214,6 +214,8 @@ http_src += ['./libavformat/urldecode.c']
 http_src += ['./libavformat/url.c']
 http_src += ['./libavformat/tcp.c']
 http_src += ['./libavformat/os_support.c']
+http_src += ['./libavformat/tls.c']
+http_src += ['./libavformat/tls_mbedtls.c']
 
 
 if (CONFIG_AUDIO_USING_FLOAT == 1):
