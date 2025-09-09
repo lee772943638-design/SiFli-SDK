@@ -25,4 +25,7 @@ Use the sample found under :zephyr_file:`samples/bluetooth/periodic_adv` on
 another board that will start periodic advertising, to which this sample will
 establish periodic advertising synchronization.
 
+The project is configured to use with bap_broadcast_src project by default. board will scan and find
+device with name "BAP Broadcast Source", and then create sync with it.
+
 See :zephyr:code-sample-category:`bluetooth` samples for details.
