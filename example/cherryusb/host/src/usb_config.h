@@ -304,6 +304,7 @@
  * in xxx32 chips, only pb14/pb15 can support hs mode, pa11/pa12 is not supported(only a few supports, but we ignore them).
 */
 // #define CONFIG_USB_HS
+#define CONFIG_USB_MUSB_WITHOUT_MULTIPOINT
 
 #ifndef usb_phyaddr2ramaddr
 #define usb_phyaddr2ramaddr(addr) (addr)
