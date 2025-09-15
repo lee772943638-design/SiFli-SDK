@@ -1072,6 +1072,7 @@ void speaker_ring_put(uint8_t *fifo, uint16_t fifo_size)
 
 static void i2s_config(audio_device_speaker_t *my, bool is_tx)
 {
+    RT_ASSERT(TX_DMA_SIZE == AUDIO_DATA_SIZE / 2)
     my->i2s = rt_device_find("i2s2");
     if (!my->i2s)
     {

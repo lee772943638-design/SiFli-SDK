@@ -10,8 +10,9 @@
 #include <stdlib.h>
 #include "board.h"
 #include "drv_config.h"
-#include "drv_i2s.h"
+
 #include "string.h"
+#include "drv_i2s_audio.h"
 
 #ifdef FPGA
 static int bf0_enable_pll(uint32_t freq, uint8_t type)
@@ -66,7 +67,8 @@ struct bf0_i2s_audio
     uint8_t *tx_pos;
 };
 
-#define AUDIO_DATA_SIZE 640 //480
+
+
 ALIGN(4) static uint8_t audio_data[AUDIO_DATA_SIZE];
 ALIGN(4) static uint8_t audio_tx_data[AUDIO_DATA_SIZE];
 #ifdef ASIC
@@ -292,7 +294,7 @@ static rt_err_t bf0_audio_configure(struct rt_audio_device *audio, struct rt_aud
             uint8_t index;
             for (index = 0; index < 9; index++)
             {
-                if (txrx_clk_div[index].samplerate == caps->udata.config.samplerate)
+                if (txrx_clk_div[index].samplerate == rate)
                 {
                     break;
                 }
@@ -323,6 +325,13 @@ static rt_err_t bf0_audio_configure(struct rt_audio_device *audio, struct rt_aud
             int mode = caps->udata.value;
             I2S_HandleTypeDef *hi2s = &(aud->hi2s);
             hi2s->Init.rx_cfg.slave_mode = 1; //rx in slave mode all the time
+#ifdef SF32LB58X
+            // for i2s1,  rx must be same as tx
+            if (hwp_i2s1 == hi2s->Instance && mode == 0)
+            {
+                hi2s->Init.rx_cfg.slave_mode = 0;
+            }
+#endif
             HAL_I2S_Config_Receive(hi2s, &(hi2s->Init.rx_cfg));
             hi2s->Init.tx_cfg.slave_mode = (uint8_t)mode;
             HAL_I2S_Config_Transmit(hi2s, &(hi2s->Init.tx_cfg));
@@ -370,7 +379,7 @@ static rt_err_t bf0_audio_configure(struct rt_audio_device *audio, struct rt_aud
             uint8_t index;
             for (index = 0; index < 9; index++)
             {
-                if (txrx_clk_div[index].samplerate == caps->udata.config.samplerate)
+                if (txrx_clk_div[index].samplerate == rate)
                 {
                     break;
                 }
@@ -1145,7 +1154,7 @@ File system used, uart do not need any more, 2 choose 1
  * if define use flash, i2s rx data save to flash and tx load from flash, use jlink to check memory
  * if node define use flash, default use psram memory, save/load with psram, use jlink to savebin/loadbin
 **/
-#define SAVE_LOAD_FROM_FLASH
+//#define SAVE_LOAD_FROM_FLASH
 #define AUD_SAVE_MEM_BASE           (0x1c180000)
 #define AUD_LOAD_MEM_BASE           (0x1c180000)
 
@@ -1423,16 +1432,16 @@ void bf0_audio_rx_entry(void *param)
 */
 static rt_err_t audio_rx_ind(rt_device_t dev, rt_size_t size)
 {
-    //LOG_I("audio_rx_ind %d\n", size);
-    rt_event_send(g_rx_ev, 1);
+    LOG_I("audio_rx_ind %d\n", size);
+    //rt_event_send(g_rx_ev, 1);
     return RT_EOK;
 }
 
 rt_err_t audio_tx_done(rt_device_t dev, void *buffer)
 {
-    //LOG_I("audio_tx_done \n");
-    buf_flag = (uint8_t *)buffer;
-    rt_event_send(g_tx_ev, 1);
+    LOG_I("audio_tx_done \n");
+    //buf_flag = (uint8_t *)buffer;
+    //rt_event_send(g_tx_ev, 1);
     return RT_EOK;
 }
 
@@ -1521,7 +1530,6 @@ int cmd_audio(int argc, char *argv[])
             if (g_mic)
             {
                 struct rt_audio_caps caps;
-                //caps.main_type = AUDIO_TYPE_OUTPUT;
                 caps.main_type = AUDIO_TYPE_INPUT;      // for I2S2, configure RX will configure RX+TX
                 caps.sub_type = AUDIO_DSP_PARAM;
                 caps.udata.config.channels = atoi(argv[2]);
@@ -1530,6 +1538,10 @@ int cmd_audio(int argc, char *argv[])
                 //caps.udata.value = atoi(argv[2]);
                 rt_device_control(g_mic, AUDIO_CTL_CONFIGURE, &caps);
 
+                caps.main_type = AUDIO_TYPE_INPUT;      // for I2S2, configure RX will configure RX+TX
+                caps.sub_type = AUDIO_DSP_MODE;
+                caps.udata.value = 0; // is salve mode setting, 0---master mode; 1--- salve mode
+                rt_device_control(g_mic, AUDIO_CTL_CONFIGURE, &caps);
             }
         }
         if (strcmp(argv[1], "start") == 0)
@@ -1540,6 +1552,7 @@ int cmd_audio(int argc, char *argv[])
                 if (strcmp(argv[2], "tx") == 0)
                 {
                     stream = AUDIO_STREAM_REPLAY;
+#if 0
                     // start replay thread
                     tx_tid = rt_thread_create("tx_th", bf0_audio_tx_entry, g_mic, 1024, RT_THREAD_PRIORITY_HIGH, RT_THREAD_TICK_DEFAULT);
                     if (tx_tid == NULL)
@@ -1548,18 +1561,18 @@ int cmd_audio(int argc, char *argv[])
                         return RT_ERROR;
                     }
                     rt_thread_startup(tx_tid);
+#endif
                     rt_device_set_tx_complete(g_mic, audio_tx_done);
                     rt_device_control(g_mic, AUDIO_CTL_START, &stream);
-                    //rt_device_write(g_mic, 0, audio_tx_data, AUDIO_BUF_SIZE);
                 }
                 if (strcmp(argv[2], "rx") == 0)
                 {
                     stream = AUDIO_STREAM_RECORD;
                     struct rt_audio_caps caps;
                     caps.main_type = AUDIO_TYPE_INPUT;      // for I2S2, configure RX will configure RX+TX
-                    //caps.sub_type = AUDIO_DSP_SAMPLERATE;
                     caps.sub_type = AUDIO_DSP_PARAM;
                     rt_device_control(g_mic, AUDIO_CTL_GETCAPS, &caps);
+#if 0
                     atest_fill_header(caps.udata.config.samplerate, (uint16_t)caps.udata.config.channels, (uint16_t)caps.udata.config.samplefmt);
                     // start record thread
                     rx_tid = rt_thread_create("aud_th", bf0_audio_rx_entry, g_mic, 1024, RT_THREAD_PRIORITY_HIGH, RT_THREAD_TICK_DEFAULT);
@@ -1569,6 +1582,7 @@ int cmd_audio(int argc, char *argv[])
                         return RT_ERROR;
                     }
                     rt_thread_startup(rx_tid);
+#endif
                     rt_device_set_rx_indicate(g_mic, audio_rx_ind);
                     rt_device_control(g_mic, AUDIO_CTL_START, &stream);
                 }
