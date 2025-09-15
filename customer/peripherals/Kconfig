@@ -231,10 +231,6 @@ config LCD_USING_NV3052C
     bool
     default n
 
-config LCD_USING_OPM060E9_V10
-    bool
-    default n
-
 config LCD_USING_ICNA3306
     bool
     default n
