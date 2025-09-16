@@ -58,7 +58,7 @@
 LCD-A128R32N1-DSI | SF32LB58-DevKit-LCD |   [sf32lb58-lcd_a128r32n1_dsi](boards/sf32lb58-lcd_a128r32n1_dsi/doc/index.md)    |
 LCD-N16R32N1-DPI | SF32LB58-DevKit-LCD |   [sf32lb58-lcd_n16r32n1_dpi](boards/sf32lb58-lcd_n16r32n1_dpi/doc/index.md)    |
 LCD-N16R32N1-DSI | SF32LB58-DevKit-LCD |   [sf32lb58-lcd_n16r32n1_dsi](boards/sf32lb58-lcd_n16r32n1_dsi/doc/index.md)    |
-LCD-N16R64N4-DSI | SF32LB58-DevKit-LCD |   [sf32lb58-lcd-n16r64n4_dsi](boards/sf32lb58-lcd_n16r64n4/doc/index.md)    |
+LCD-N16R64N4 | SF32LB58-DevKit-LCD |   [sf32lb58-lcd-n16r64n4](boards/sf32lb58-lcd_n16r64n4/doc/index.md)    |
 
 ## SF32LB56x系列
 
