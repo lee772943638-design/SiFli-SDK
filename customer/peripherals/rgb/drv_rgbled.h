@@ -33,12 +33,6 @@ typedef enum {
 /* RGB LED configuration structures */
 
 /**
- * @brief Single LED configuration structure
- * @note Used with RGB_CMD_SET_SINGLE_COLOR command
- * @note This structure is already defined in rt_drv_pwm.h
- */
-
-/**
  * @brief Multiple LED configuration structure
  * @note Used with RGB_CMD_SET_MULTI_COLOR command
  */

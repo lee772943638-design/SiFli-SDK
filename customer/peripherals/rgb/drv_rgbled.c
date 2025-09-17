@@ -180,7 +180,8 @@ static rt_err_t drv_rgbled_control(rt_device_t device, int cmd, void *arg)
 
     switch (cmd)
     {
-    case RGB_CMD_SET_SINGLE_COLOR:
+    case RGB_CMD_SET_SINGLE_COLOR: 
+    case PWM_CMD_SET_COLOR:
         {
             struct rt_rgbled_configuration *single_config = (struct rt_rgbled_configuration *)arg;
             if (!single_config)
