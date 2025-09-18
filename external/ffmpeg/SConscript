@@ -28,6 +28,7 @@ ogg_decoder_src = []
 cwd = GetCurrentDir()
 inc    += [cwd]
 inc    += [cwd + "/compat"]
+asflags= ' -I' + cwd + ' -I' + cwd + '/compat'
 
 common_src  = Glob('./libavutil/*.c')
 common_src += Glob('./compat/*.c')
@@ -394,6 +395,6 @@ if GetDepend(['SOLUTION_RES_BUILT_IN']):
 #src += ['./api-h264-test.c']
 #src += ['./doc/examples/demuxing_decoding.c']
 
-group = DefineGroup('ffmpeg', src, depend = ['PKG_USING_FFMPEG'], CPPPATH = inc, LOCAL_CCFLAGS = LOCAL_CCFLAGS, CPPDEFINES = CPPDEFINES)
+group = DefineGroup('ffmpeg', src, depend = ['PKG_USING_FFMPEG'], CPPPATH = inc, LOCAL_CCFLAGS = LOCAL_CCFLAGS, CPPDEFINES = CPPDEFINES, ASFLAGS=asflags)
 
 Return('group')

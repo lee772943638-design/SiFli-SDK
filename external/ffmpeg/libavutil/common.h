@@ -220,7 +220,14 @@ static av_always_inline av_const int16_t av_clip_int16_c(int a)
 static av_always_inline av_const int32_t av_clipl_int32_c(int64_t a)
 {
 #ifndef WIN32
-    return __SSAT(a, 32);
+    int x, y;
+    __asm__ ("adds   %1, %R2, %Q2, lsr #31  \n\t"
+             "itet   ne                     \n\t"
+             "mvnne  %1, #1<<31             \n\t"
+             "moveq  %0, %Q2                \n\t"
+             "eorne  %0, %1,  %R2, asr #31  \n\t"
+             : "=r"(x), "=&r"(y) : "r"(a) : "cc");
+    return x;
 #endif
     if ((a+0x80000000u) & ~UINT64_C(0xFFFFFFFF)) return (int32_t)((a>>63) ^ 0x7FFFFFFF);
     else                                         return (int32_t)a;

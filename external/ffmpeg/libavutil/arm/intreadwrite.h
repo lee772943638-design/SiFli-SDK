@@ -23,8 +23,7 @@
 #include "config.h"
 #include "libavutil/attributes.h"
 
-#if HAVE_FAST_UNALIGNED && HAVE_INLINE_ASM && AV_GCC_VERSION_AT_MOST(4,6)
-
+#if HAVE_FAST_UNALIGNED && HAVE_INLINE_ASM //&& AV_GCC_VERSION_AT_MOST(4,6)
 #define AV_RN16 AV_RN16
 static av_always_inline unsigned AV_RN16(const void *p)
 {
