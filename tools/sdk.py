@@ -42,7 +42,7 @@ import python_version_checker  # noqa: E402
 try:
     from sdk_py_actions.errors import FatalError  # noqa: E402
     from sdk_py_actions.tools import (PROG, SHELL_COMPLETE_RUN, SHELL_COMPLETE_VAR, PropertyDict,  # noqa: E402
-                                      debug_print_idf_version, merge_action_lists, print_warning)
+                                      debug_print_sdk_version, merge_action_lists, print_warning)
     # TODO: We will add the component manager in the future
     # if os.getenv('IDF_COMPONENT_MANAGER') != '0':
     #     from idf_component_manager import idf_extensions
@@ -116,7 +116,7 @@ def check_environment() -> List:
         checks_output.append(out.decode('utf-8', 'ignore').strip())
     except subprocess.CalledProcessError as e:
         print_warning(e.output.decode('utf-8', 'ignore'), stream=sys.stderr)
-        debug_print_idf_version()
+        debug_print_sdk_version()
         raise SystemExit(1)
 
     # Check used Python interpreter
