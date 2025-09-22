@@ -22,3 +22,4 @@ scons
 esp-idf-kconfig
 pycryptodome
 pyyaml
+tqdm

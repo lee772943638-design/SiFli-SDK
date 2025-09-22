@@ -1491,6 +1491,10 @@ def PrepareBuilding(env, has_libcpu=False, remove_components=[], buildlib=None):
                                duplicate=0,
                                exports='remove_components'))
 
+    # Add rt-thread online packages
+    if os.path.isfile(os.path.join(Env['BSP_ROOT'], 'packages/SConscript')):
+        objs.extend(SConscript(os.path.join(Env['BSP_ROOT'], 'packages/SConscript'), variant_dir=bsp_vdir + '/rt-pkgs', duplicate=0))
+
     return objs
 
 
