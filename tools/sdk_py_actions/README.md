@@ -29,6 +29,8 @@ This function have to return a dict with 3 possible keys:
 }
 ```
 
+It is important to note that due to the static checking mechanism of `click`, the corresponding callback function signature must include parameters of the appropriate types. Otherwise, an error will occur before the callback is executed.
+
 Where function `global_callback(ctx, global_args, tasks)` accepts 3 arguments:
 
 - ctx - [Click context](https://click.palletsprojects.com/en/5.x/api/#context)
