@@ -907,6 +907,16 @@ def IsEmbeddedProjEnv(env=None):
     else:
         return False
 
+def AddExternalComponents(deps_file):
+    conandeps = SConscript(deps_file)
+    objs = []
+    build_vdir = Env['build_dir']
+    for path in conandeps["conandeps"]["LIBPATH"]:
+        if os.path.isfile(os.path.join(path, 'SConscript')):
+            pkg_name = os.path.normpath(path).split(os.sep)[-2]
+            objs += SConscript(os.path.join(path, 'SConscript'), variant_dir=f"{build_vdir}/sf-pkgs/{pkg_name}", duplicate=0)
+    return objs
+
 def PrepareBuilding(env, has_libcpu=False, remove_components=[], buildlib=None):
     import rtconfig
     import platform
@@ -1495,6 +1505,10 @@ def PrepareBuilding(env, has_libcpu=False, remove_components=[], buildlib=None):
     if os.path.isfile(os.path.join(Env['BSP_ROOT'], 'packages/SConscript')):
         objs.extend(SConscript(os.path.join(Env['BSP_ROOT'], 'packages/SConscript'), variant_dir=bsp_vdir + '/rt-pkgs', duplicate=0))
 
+    # Add external components
+    if os.path.isfile(os.path.join(Env['BSP_ROOT'], 'sf-pkgs/SConscript_conandeps')):
+        objs.extend(AddExternalComponents(os.path.join(Env['BSP_ROOT'], 'sf-pkgs/SConscript_conandeps')))
+
     return objs
 
 
@@ -1543,6 +1557,7 @@ def InitBuild(bsp_root, build_dir, board):
     # create .config and rtconfig.h    
     # kconfiglib doesn't recognize backslash
     bsp_root = bsp_root.replace('\\', '/')
+    s += 'osource "{}/sf-pkgs/Kconfig.conandeps"\n'.format(bsp_root)
     s += 'source "{}/Kconfig.proj"'.format(bsp_root)
     f = open(os.path.join(build_dir, 'Kconfig'), 'w')
     try:

@@ -2237,6 +2237,55 @@ def get_tools_spec_and_platform_info(selected_platform: str, targets: List[str],
 
     return tools_spec, tools_info_for_platform
 
+def get_conan_config(sdk_version: str, online: bool = True) -> str:
+    """
+    Download conan_config file for specified SiFli SDK version if it was not downloaded recently (1 day),
+    check success and place it in conan_config file location.
+    """
+    sdk_download_url = get_sifli_sdk_download_url_apply_mirrors()
+    conan_config_file = f'sdk.conan-config.v{sdk_version}.zip'
+    conan_config_path = os.path.join(g.sifli_sdk_tools_path, conan_config_file)
+    conan_config_file_url = '/'.join([sdk_download_url, conan_config_file])
+    temp_path = f'{conan_config_path}.tmp'
+    if not online:
+        if os.path.isfile(conan_config_path):
+            return conan_config_path
+        else:
+            fatal(f'{conan_config_path} doesn\'t exist. Perhaps you\'ve forgotten to run the install scripts. '
+                  f'Please check the installation guide for more information.')
+            raise SystemExit(1)
+    
+    mkdir_p(os.path.dirname(temp_path))
+
+    try:
+        age = datetime.date.today() - datetime.date.fromtimestamp(os.path.getmtime(conan_config_path))
+        if age < datetime.timedelta(days=1):
+            info(f'Skipping the download of {conan_config_path} because it was downloaded recently.')
+            return conan_config_path
+    except OSError:
+        # doesn't exist or inaccessible
+        pass
+
+    for _ in range(DOWNLOAD_RETRY_COUNT):
+        err = download(conan_config_file_url, temp_path)
+        if not os.path.isfile(temp_path):
+            warn(f'Download failure: {err}')
+            warn(f'Failed to download {conan_config_file_url} to {temp_path}')
+            continue
+        if os.path.isfile(conan_config_path):
+            # Windows cannot rename to existing file. It needs to be deleted.
+            os.remove(conan_config_path)
+        rename_with_retry(temp_path, conan_config_path)
+        return conan_config_path
+
+    if os.path.isfile(conan_config_path):
+        warn('Failed to download, retry count has expired, using a previously downloaded version')
+        return conan_config_path
+    else:
+        fatal('Failed to download, and retry count has expired')
+        print_hints_on_download_error(str(err))
+        info('See the help on how to disable constraints in order to work around this issue.')
+        raise SystemExit(1)
 
 def action_download(args):  # type: ignore
     """
@@ -2351,6 +2400,22 @@ def action_install(args):  # type: ignore
 
         tool_obj.download(tool_version)
         tool_obj.install(tool_version)
+    conan_config_path = get_conan_config(get_sifli_sdk_version())
+    # run conan config install <path>
+    try:
+        subprocess.check_call(['conan', 'config', 'install', conan_config_path],
+                              stdout=sys.stdout, stderr=sys.stderr)
+    except subprocess.CalledProcessError as e:
+        fatal(f'Failed to run conan config install {conan_config_path} with error: {e}')
+        raise SystemExit(1)
+    try:
+        subprocess.check_call(['conan', 'remote', 'add', 'artifactory', 'https://jfrog.sifli.com/artifactory/api/conan/conan-local', '--force'],
+                              stdout=sys.stdout, stderr=sys.stderr)
+    except subprocess.CalledProcessError as e:
+        fatal(f'Failed to run conan remote add artifactory with error: {e}')
+        raise SystemExit(1)
+    
+
 
 
 def get_wheels_dir() -> Optional[str]:

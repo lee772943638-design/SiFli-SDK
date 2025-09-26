@@ -23,3 +23,5 @@ esp-idf-kconfig
 pycryptodome
 pyyaml
 tqdm
+conan
+cryptography
