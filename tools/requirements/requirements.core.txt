@@ -21,3 +21,4 @@ psutil
 scons
 esp-idf-kconfig
 pycryptodome
+PyYAML
