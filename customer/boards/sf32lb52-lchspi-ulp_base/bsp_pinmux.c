@@ -165,9 +165,10 @@ static void BSP_PIN_Common(void)
     // PA22 #XTAL32K_XI
     // PA23 #XTAL32K_XO
 
-    // USBD
-    HAL_PIN_Set_Analog(PAD_PA35, 1);                    // USB_DP
-    HAL_PIN_Set_Analog(PAD_PA36, 1);                    // USB_DM
+    // // USBD
+
+    HAL_PIN_Set(PAD_PA35, USART3_TXD, PIN_PULLUP, 1);
+    HAL_PIN_Set(PAD_PA36, USART3_RXD, PIN_PULLUP, 1);
 
     // SPI1(TF card)
     HAL_PIN_Set(PAD_PA24, SPI1_DIO, PIN_NOPULL, 1);
