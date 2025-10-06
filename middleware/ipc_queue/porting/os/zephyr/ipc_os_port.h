@@ -7,6 +7,8 @@
 #ifndef IPC_OS_PORT_H
 #define IPC_OS_PORT_H
 #include <stdint.h>
+
+#undef IS_ALIGNED
 #include <zephyr/kernel.h>
 
 #ifdef __cplusplus
