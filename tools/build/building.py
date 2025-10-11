@@ -1964,7 +1964,8 @@ def BuildLibInstallAction(target, source, env):
             break
 
 def DoBuilding(target, objects):
-        
+    import rtconfig
+
     # merge all objects into one list
     def one_list(l):
         lst = []
@@ -1993,6 +1994,14 @@ def DoBuilding(target, objects):
 
     objects = one_list(objects)
     program = None
+
+    if rtconfig.CROSS_TOOL == 'keil':
+        for group in Projects:
+            if 'Kernel' == group['name']:
+                # only add cpppath of Kernel group to get the path of `rtconfig.h`, avoid too long command line parameters
+                asm_include_paths = ' ' + ' '.join(['-I{}'.format(path.replace('\\', '/')) for path in group['CPPPATH']]) + ' '
+                Env.AppendUnique(ASFLAGS = asm_include_paths)
+                break
         
     # check whether special buildlib option
     lib_name = GetOption('buildlib')
