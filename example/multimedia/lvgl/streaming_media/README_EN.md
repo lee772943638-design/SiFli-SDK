@@ -80,9 +80,9 @@ Please enable the following options in menuconfig:
    - Path: Config LCD on board → Built-in LCD module driver
    - Select: 1.85 rect QSPI Single-Screen LCD
 
-7. **Enable lvgl and FFMPEG libraries**
+7. **Enable lvgl、FFMPEG、MBedTLS libraries**
    - Path: Third party packages
-   - Macros: `CONFIG_PKG_USING_LITTLEVGL2RTT`, `CONFIG_PKG_USING_FFMPEG`
+   - Macros: `CONFIG_PKG_USING_LITTLEVGL2RTT`, `CONFIG_PKG_USING_FFMPEG`，`CONFIG_PKG_USING_MBEDTLS`
 
 ## Compilation and Flashing
 

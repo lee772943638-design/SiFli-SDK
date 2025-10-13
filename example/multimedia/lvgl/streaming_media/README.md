@@ -77,9 +77,9 @@
    - 路径：Config LCD on board → Built-in LCD module driver
    - 选择：1.85 rect QSPI Single-Screen LCD
 
-7. **使能 lvgl 和 FFMPEG 库**
+7. **使能 lvgl 和 FFMPEG 库以及MBedTLS依赖**
    - 路径：Third party packages
-   - 宏开关：`CONFIG_PKG_USING_LITTLEVGL2RTT`、`CONFIG_PKG_USING_FFMPEG`
+   - 宏开关：`CONFIG_PKG_USING_LITTLEVGL2RTT`、`CONFIG_PKG_USING_FFMPEG`、`CONFIG_PKG_USING_MBEDTLS`
 
 ## 编译和烧录
 
