@@ -10,7 +10,7 @@
 #define MSC_IN_EP  0x85
 #define MSC_OUT_EP 0x02
 
-#define USBD_VID 0xFFFF
+#define USBD_VID 0x38f4
 #define USBD_PID 0xFFFF
 #define USBD_MAX_POWER 100
 #define USBD_LANGID_STRING 1033

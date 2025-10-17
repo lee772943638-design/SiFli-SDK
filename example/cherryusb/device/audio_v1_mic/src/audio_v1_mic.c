@@ -9,7 +9,7 @@
 #include "usbd_audio.h"
 #include "usbd_core.h"
 
-#define USBD_VID 0xFFFF
+#define USBD_VID 0x38f4
 #define USBD_PID 0xFFFF
 #define USBD_MAX_POWER 100
 #define USBD_LANGID_STRING 1033

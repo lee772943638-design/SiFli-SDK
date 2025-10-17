@@ -17,7 +17,7 @@
 #define HID_INT_EP_INTERVAL 10
 #define HID_BUSID 0
 
-#define USBD_VID 0xFFFF
+#define USBD_VID 0x38f4
 #define USBD_PID 0xFFFF
 #define USBD_MAX_POWER 100
 
