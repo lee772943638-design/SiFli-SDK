@@ -3,7 +3,7 @@
    When developing third-party libraries, avoid directly calling interfaces like audio_open() in the library, as header files and structures may change. Instead, encapsulate an adaptor to invoke multimedia interfaces. After the library is released, some structures in the header files may be modified. Only recompile the adaptor code without recompiling the released library.
 ## 1 Audio
 In the RT-Thread device driver documentation for audio drivers
-[device driver](/dirvers/audio.md)，In practical scenario, multi audio stream may work together, if not support audio mix, only one reqeust can use hardware according to priority, request may resume playback after being interrupted, or mix and play together. To meet these requirements, an audio server was implemented. ref[audio server](/extra/audio_server_en.pdf).use client/server design pattern.
+[device driver](/drivers/audio.md)，In practical scenario, multi audio stream may work together, if not support audio mix, only one reqeust can use hardware according to priority, request may resume playback after being interrupted, or mix and play together. To meet these requirements, an audio server was implemented. ref[audio server](/extra/audio_server_en.pdf).use client/server design pattern.
 
 audio_server_init() will be run at kernel start up,.
 
@@ -178,7 +178,8 @@ typedef int (*audio_server_callback_func)(audio_server_callback_cmt_t cmd,
              );
 /*
   reserved:
-    1. cmd is as_callback_cmd_data_coming, reserved is a pointer of audio_server_coming_data_t
+    1. cmd is as_callback_cmd_data_coming, reserved is a pointer of
+       audio_server_coming_data_t
     2. ...
 
 */
@@ -221,7 +222,8 @@ static int mic2speaker_callback(audio_server_callback_cmt_t cmd,
     {
         /*
           if not use mic data, here should audio_write() next frame data
-          using other PCM data source. here is in audio server thread，it's better to nority app writting thread to call audio_write().
+          using other PCM data source. here is in audio server thread，
+          it's better to nority app writting thread to call audio_write().
         */
         //audio_write(client, other_pcm_data, WRITE_CACHE_SIZE / 2);
     }
@@ -268,7 +270,8 @@ int audio_write(audio_client_t handle, uint8_t *data, uint32_t data_len);
 input:
     handle   - [in] handle of audio client
     data     - [in] 16bit PCM little-end PCM data, if stereo, data layout as LRLRLR.....
-    data_len - [in] data lenght in bytes, should less than write cache size, best is half of write cache size
+    data_len - [in] data lenght in bytes, should less than write cache size,
+                    best is half of write cache size
 return:
     -2: invalid parameter
     -1: clent is suppended or paused, drop audio data
@@ -478,7 +481,8 @@ CONFIG_AUDIO_TX_USING_I2S=y
 # This way, the two clients created separately with AUDIO_TX and
 # AUDIO_RX can work together
 CONFIG_MULTI_CLIENTS_AT_WORKING=y
-# If both clients are AUDIO_TX and rely on the audio server to mix, # then you need to enable this
+# If both clients are AUDIO_TX and rely on the audio server to mix,
+# then you need to enable this
 CONFIG_SOFTWARE_TX_MIX_ENABLE=y
 
 ```
@@ -596,7 +600,7 @@ RT_WEAK uint8_t get_eq_config(audio_type_t type);
 ```
 
 ## EQ Parameter Settings
-The EQ tool Sifli_EQ is available at https://wiki.sifli.com/tools/index.html
+The EQ tool [Sifli_EQ](https://wiki.sifli.com/tools/index.html)
 The EQ parameters are in drv_audprc.c. They should ideally be generated using the tool, but sometimes it is convenient to directly modify the code for debugging.The following commands can be used to adjust the mic gain.  You can also refer to the code implementation:
 mic_gain
 pdm_gain (if PDM is configured)
@@ -620,7 +624,7 @@ int8_t g_music_vol_level[16] = {-55, -34, -32, -30, -28, -26, -24, -22, -20, -17
 ## Video
 The video uses ffmpeg, so ffmpeg needs to be configured; see exernal/ffmpeg/Kconfig. It encapsulates interfaces for using ffmpeg. To improve playback speed, the MP4 file encoding format needs to be converted using the video tools provided by sifli. 
 
-[GraphicsTool]https://wiki.sifli.com/tools/index.html
+[GraphicsTool](https://wiki.sifli.com/tools/index.html)
 
 It also supports automatically recognizing videos in sifli's custom ezip format, for which the MP4 file needs to be converted to ezip using the tools provided by sifli.For API reference, see the descriptions in media_dec.h.
     

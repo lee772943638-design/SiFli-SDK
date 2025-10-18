@@ -3,7 +3,7 @@
    第三方lib开发，不要直接在lib里调用audio_open()等接口，因为头文件和结构体可能更改，要封装一个adaptor，在adaptor里调用多媒体的接口，因为lib发布后，头文件里一些结构体可能更改，需要重新编译,这样只编译adaptor的代码，不用重新编译发布lib
 
 ## 音频
-音频的驱动接口的RT-Thread 设备驱动说明里，[设备级驱动接口](/dirvers/audio.md)，在实际使用时，涉及电话时带回生消除的，播放音乐过程来通知音的，就是存在多个音频都请求设备驱动工作的场景.可能的需求是, 按优先级互相打断，被打断后可以恢复播放，或者混音一起播放，为了满足这个需求，实现了audio server,参考[audio server实现原理](/extra/audio_server.pdf)，管理多个用户的音频设备的使用，采用client/server的设计模式，每个音频播放请求为一个client。
+音频的驱动接口的RT-Thread 设备驱动说明里，[设备级驱动接口](/drivers/audio.md)，在实际使用时，涉及电话时带回生消除的，播放音乐过程来通知音的，就是存在多个音频都请求设备驱动工作的场景.可能的需求是, 按优先级互相打断，被打断后可以恢复播放，或者混音一起播放，为了满足这个需求，实现了audio server,参考[audio server使用说明](/extra/audio_server.pdf)，管理多个用户的音频设备的使用，采用client/server的设计模式，每个音频播放请求为一个client。
 开机会自动调audio_server_init()启动audio server， 使用了audio server, 音频相关的都应该基于audio server作为audio与设备的交互。
 
 接口在$(sdk_root)/middleware/audio/include/audio_server.h里定义。
@@ -183,7 +183,8 @@ typedef int (*audio_server_callback_func)(audio_server_callback_cmt_t cmd,
              );
 /*
   reserved的含义:
-    1. cmd is as_callback_cmd_data_coming, reserved is a pointer of audio_server_coming_data_t
+    1. cmd is as_callback_cmd_data_coming, reserved is  a pointer of
+       audio_server_coming_data_t
     2. ...
 
 */
@@ -274,7 +275,8 @@ int audio_write(audio_client_t handle, uint8_t *data, uint32_t data_len);
 input:
     handle   - [in] handle of audio client
     data     - [in] 16bit PCM little-end PCM data, if stereo, data layout as LRLRLR.....
-    data_len - [in] data lenght in bytes, should less than write cache size, best is half of write cache size
+    data_len - [in] data lenght in bytes, should less than write cache size,
+                    best is half of write cache size
 return:
     -2: invalid parameter
     -1: clent is suppended or paused, drop audio data
@@ -598,7 +600,7 @@ RT_WEAK uint8_t get_eq_config(audio_type_t type);
 
 ## EQ参数设置
 
-EQ工具Sifli_EQ在 https://wiki.sifli.com/tools/index.html
+EQ工具参考[Sifli_EQ](https://wiki.sifli.com/tools/index.html)
 
 EQ的参数在drv_audprc.c， 因该用工具生成，有时会方便直接修改代码调试。
 
@@ -632,7 +634,7 @@ int8_t g_music_vol_level[16] = {-55, -34, -32, -30, -28, -26, -24, -22, -20, -17
 ## 视频部分
 视频使用了ffmpeg，需要配置ffmpeg， 见exernal/ffmpeg/Kconfig，封装了使用ffmepg的接口
 为了提高播放速度，需要用sifli提供的视频工具转换下MP4文件编码格式。
-[GraphicsTool]https://wiki.sifli.com/tools/index.html
+[GraphicsTool](https://wiki.sifli.com/tools/index.html)
 也支持自动识别sifli自定义的ezip格式的视频文件， 需要用sifli提供的工具把mp4文件转换为ezip
 
 API参考media_dec.h中说明
