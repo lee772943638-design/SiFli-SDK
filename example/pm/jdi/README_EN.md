@@ -1,16 +1,16 @@
 # JDI Power Consumption Test Example
 
-Source path: example/pm_jdi
+Source code path: example/pm_jdi
 
 ### Supported Development Boards
 This example can run on the following development boards:
 - sf32lb52-core_n16r16
 
 ## Overview
-After power-on, the screen is refreshed for 5 seconds before entering sleep mode. The system can be woken up by pressing Key1. After waking up, the JDI screen refreshes for another 5 seconds. Additionally, a timed wake-up is set to occur every 1 minute to refresh the screen once before entering sleep mode again. This tests power consumption in both sleep and wake states.
+After powering on, the screen refreshes for 5 seconds and then enters sleep mode. It can be awakened by pressing Key1. After awakening, the JDI screen refreshes for another 5 seconds. Additionally, a timed wake-up is set to occur every 1 minute to refresh the screen once before entering sleep mode again. This tests power consumption in both sleep and awake states.
 
 ## Hardware Connections
-During low power consumption testing, the board is no longer powered via USB but requires 5V power supply to the board's VCC_5V through a power consumption detection tool. Therefore, the following operations are needed to conduct power consumption testing.
+During low power consumption testing, the board is no longer powered via USB but requires 5V power supply to the board's VCC_5V through a power consumption detection tool. Therefore, the following operations need to be performed for power consumption testing.
 
 ### JDI Screen Pin Connection Configuration
 | Pin | JDI Screen Adapter Board Pin | Adapter Board Physical Pin |
@@ -31,58 +31,61 @@ During low power consumption testing, the board is no longer powered via USB but
 | PA25 | XERP | 13 |
 | PA24 | VCOM | 7 |
 
-Note: The JDI screen adapter board's physical pin 25 needs to be connected to the development board's 3V3 to power the screen.
+Note: Physical pin 25 of the JDI screen adapter board needs to be connected to the development board's 3V3 to power the screen.
 
 * Original power supply situation of the development board
 ![alt text](assets/core_board.png)
 
-* Remove all jumper caps except ADDIO, PVDD, and AVDD
+* Remove all jumper caps except ADDIO, PVDD, AVDD
 ![alt text](assets/remove_jumper_cap.png)
 
 * Connect the power consumption test tool's VOUT to the board's VCC_5V, and connect GND to the PPK's GND pin
 ![alt text](assets/PPK_connect.png)
 
-* For convenient log viewing, connect the UART converter to the board's TX and RX
+* For convenient log viewing, connect the serial adapter board as shown
 ![alt text](assets/uart_connect.png)
 
 * Final connections
 ![alt text](assets/final_connect.png)
 
 ## Menuconfig Configuration
-* Required configurations are enabled by default
+* The required configurations are enabled by default
 
 ```c
 menuconfig --board=board_name
 ```
+
 1. Enable low power mode
 - Path: Sifli middleware 
     - Enable: Enable low power support
         - Macro switch: `CONFIG_BSP_USING_PM`
-        - Function: Enable low power mode
+        - Function: Enable low power
 
-2. Enable low power related logs (disabled by default to reduce power consumption; can be enabled in menuconfig for debugging and verification)
+2. Enable logging for low power related information (disabled by default to reduce power consumption; can be enabled in menuconfig for debugging verification)
 - Path: SiFli Middleware → Enable Low Power Support
     - Enable: Enable PM Debug
         - Macro switch: `CONFIG_BSP_PM_DEBUG`
         - Function: Output low power related logs
 
 ### Compilation and Flashing
-The 52 platform's default configuration is Deep Sleep mode for休眠<br>
-Switch to the example project directory and run the scons command to compile:
+The 52 platform defaults to Deep Sleep mode for hibernation<br>
+Switch to the project directory of the example and run the scons command to compile:
 ```
 scons --board=sf32lb52-core_n16r16 -j8
 ```
 Flashing:
 ```
- build_sf32lb52-core_n16r16_hcpu\uart_download.bat
+build_sf32lb52-core_n16r16_hcpu\uart_download.bat
 
      Uart Download
 
 please input the serial port num:19
 ```
+
 ## Example Output Results
 
 ### Log Printout
+```
 09-26 14:19:38:801    SFBL
 09-26 14:19:40:858    Serial:c2,Chip:4,Package:6,Rev:f  Reason:00000000
 09-26 14:19:40:863    Serial PowerOnMOde:0 rtc_record:00000000
@@ -141,41 +144,42 @@ please input the serial port num:19
 09-26 14:19:54:027    [433681] I/drv.lcd lcd_task: idle mode on=1
 09-26 14:19:54:028    The LCD is turned off, entering sleep mode...
 09-26 14:19:54:029    [pm]S:3,433726
+```
 
 ## Power Consumption Test Results
-* Using a 200mAh battery capacity as an example, we tested under the above two modes to estimate the device's usable time.
-* Classified into three scenarios: light usage, moderate usage, and heavy usage, corresponding to 100, 300, and 500 wake-ups respectively, with each wake-up performing 5 seconds of screen refresh operations.
+* We take a 200mAh battery capacity as an example to test in the above two modes and estimate the device usage time.
+* Classify into three scenarios: light usage, moderate usage, and heavy usage, corresponding to 100, 300, and 500 wake-ups respectively, with each wake-up executing 5 seconds of screen refresh operation.
 
 ### Wake-up Power Consumption
-* Average current when woken up by key press and refreshing screen for 5s: 4.64mA
+* The average current when waking up via key press and refreshing the screen for 5s is: 4.64mA
 ![alt text](assets/wakeup.png)
 
-* Power consumption for one day of use
+* Power consumption used in one day
     100 times: 4.64 * 100 * 5 / 3600 = 0.64 (mAh)
     300 times: 4.64 * 300 * 5 / 3600 = 1.93 (mAh) 
     500 times: 4.64 * 500 * 5 / 3600 = 3.22 (mAh)
 
 ### Sleep Power Consumption
-* Average current in sleep mode: 56uA
+* The average current in sleep mode is: 56uA
 * Current breakdown
-        - Chip module power consumption: ~50uA
-        - Screen power consumption: ~7uA (VCOM, FRP need to output a 60Hz waveform)
+        - Chip module power consumption: around 50uA
+        - Screen power consumption: around 7uA (VCOM, FRP need to output a 60Hz waveform)
 ![alt text](assets/enter_sleep.png)
 
-* Power required for one hour of sleep
+* Power consumption needed for one hour of sleep
     56 / 1000 * 1 = 0.056 (mAh)
 
-* Total daily consumption calculation:
+* Total daily consumption calculation as follows:
     100 times: 0.056 * (24 * 3600 - 100 * 5) / 3600 + 0.64 = 1.98 (mAh)  
     300 times: 0.056 * (24 * 3600 - 300 * 5) / 3600 + 1.93 = 3.25 (mAh)
     500 times: 0.056 * (24 * 3600 - 500 * 5) / 3600 + 3.22 = 4.53 (mAh)
 
 3. Data Summary
-| | Wake-up Screen On | Screen Off Sleep | Daily Consumption | Usable Days |
+| |Screen On When Waking Up|Screen Off During Sleep|Daily Consumption|Usable Days|
 |:--- |:--- |:--- |:--- |:--- |
-|100 times/day|0.64mAh |1.34mAh |1.98mAh |101 days |
-|300 times/day|1.93mAh |1.32mAh |3.25mAh |61.5 days |
-|500 times/day|3.22mAh |1.31mAh |4.53mAh |44.1 days |
+|100 times/day|0.64mAh|1.34mAh|1.98mAh|101 days|
+|300 times/day|1.93mAh|1.32mAh|3.25mAh|61.5 days|
+|500 times/day|3.22mAh|1.31mAh|4.53mAh|44.1 days|
 
 ## Abnormal Diagnosis
 If the measured results differ significantly from those in the document, there may be abnormalities that require troubleshooting.
@@ -183,8 +187,8 @@ VDDIO: Chip IO power supply
 PVDD: Chip main power input
 AVDD: Chip audio
 
-1. Hardware modifications may cause significant deviations in test results
-2. Power supply voltage mismatch with required voltage may also cause significant deviations in test results (5V power supply is used)
-3. If the screen cannot refresh normally, check whether the pins on the screen adapter board are correctly connected to the board
+* 1. If there are hardware modifications, it may cause significant deviations in test results
+* 2. Mismatched power supply voltage will also cause significant deviations in test results (using 5V power supply)
+* 3. If the screen cannot properly refresh, check whether the pins on the screen adapter board are correctly connected to the board
 
-* Troubleshooting steps: Remove the original 5V power supply and remove the jumper caps for VDDIO, PVDD, and AVDD. These three paths can be powered individually using the power consumption test tool, while the other two paths are powered through external VCC. This allows for individual power consumption testing to identify which power path has abnormalities (note that VCC_3V3 also needs to be powered separately as it powers the screen).
+* Troubleshooting steps: You can remove the original 5V power supply and remove the jumper caps of VDDIO, PVDD, and AVDD. These three paths can be powered individually using the power consumption test tool, while the other two paths are powered through external VCC. This allows single-path power consumption testing to identify which power source has abnormalities (note that VCC_3V3 also needs to be powered separately as it powers the screen).
