@@ -464,8 +464,20 @@ CONFIG_AUDIO_RX_USING_I2S=y
 # from PDM
 CONFIG_AUDIO_RX_USING_PDM=y
 ```
-```python
+If outputting to I2S, first configure I2S according to the [device-level driver interface](/drivers/audio.md), then in the audio server, refer to that configuration to set up the i2s_config(my, 1); check its internal implementation, and track whether speaker_tx_done is triggered.
 
+```c
+static void config_tx(audio_device_speaker_t *my, audio_client_t client)
+{
+#if defined(AUDIO_TX_USING_I2S)
+    i2s_config(my, 1);
+    rt_device_set_tx_complete(my->i2s, speaker_tx_done);
+#else
+    ....
+#endif
+```
+
+```python
 Choose one of the two options below to indicate which hardware
 the speaker device uses for audio output. If it's I2S, you also
 need to enable the corresponding driver in RT-Thread.

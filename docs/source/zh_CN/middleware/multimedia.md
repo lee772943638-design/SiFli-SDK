@@ -3,8 +3,8 @@
    第三方lib开发，不要直接在lib里调用audio_open()等接口，因为头文件和结构体可能更改，要封装一个adaptor，在adaptor里调用多媒体的接口，因为lib发布后，头文件里一些结构体可能更改，需要重新编译,这样只编译adaptor的代码，不用重新编译发布lib
 
 ## 音频
-音频的驱动接口的RT-Thread 设备驱动说明里，[设备级驱动接口](/drivers/audio.md)，在实际使用时，涉及电话时带回生消除的，播放音乐过程来通知音的，就是存在多个音频都请求设备驱动工作的场景.可能的需求是, 按优先级互相打断，被打断后可以恢复播放，或者混音一起播放，为了满足这个需求，实现了audio server,参考[audio server使用说明](/extra/audio_server.pdf)，管理多个用户的音频设备的使用，采用client/server的设计模式，每个音频播放请求为一个client。
-开机会自动调audio_server_init()启动audio server， 使用了audio server, 音频相关的都应该基于audio server作为audio与设备的交互。
+音频的驱动接口的RT-Thread 设备驱动说明里，[设备级驱动接口](/drivers/audio.md)，在实际使用时，涉及电话时带回声消除的，播放音乐过程来通知音的，就是存在多个音频都请求设备驱动工作的场景.可能的需求是, 按优先级互相打断，被打断后可以恢复播放，或者混音一起播放，为了满足这个需求，实现了audio server,参考[audio server使用说明](/extra/audio_server.pdf)，管理多个用户的音频设备的使用，采用client/server的设计模式，每个音频播放请求为一个client。
+开机会自动调audio_server_init()启动audio server， 使用了audio server, 音频相关的都应该基于audio server作为audio与底层设备的交互。
 
 接口在$(sdk_root)/middleware/audio/include/audio_server.h里定义。
 使用流程如下:
@@ -60,7 +60,7 @@ typedef struct
      */
     uint8_t  write_bits_per_sample;
 
-    /** 是否需要audio 3a算法，在audio_open()时rwflag为AUDIO_TXRX有小，一般时双向
+    /** 是否需要audio 3a算法，在audio_open()时rwflag为AUDIO_TXRX有效，一般是双向
      *  语音通话传输时需要，比如BT HFP电话，VoIP， 做回声消除处理。
      *  算法一般都是只支持16k或8k的回声消除，其他采样率是不行的
      */
@@ -109,12 +109,12 @@ audio_client_t audio_open2(audio_type_t audio_type,
                            void *callback_userdata,
                            audio_device_e fixed_device);
 /**
-  这个函数同audio_open()比就是最有多了要个参数fixed_device，
+  这个函数同audio_open()比就是最后多了个参数fixed_device，
   它表示这个client要固定使用哪个设备播放，不参加输出设备的切换，
   他的输入范围在audio_device_e定义的实体设备，
   按上面的定义，应该是从AUDIO_DEVICE_SPEAKER到AUDIO_DEVICE_BLE_BAP_SINK，
   目前没有app这样用，可能的用法是使用AUDIO_DEVICE_SPEAKER，
-  这样无论是否连上tws耳机，这个client一直固定的从speaker输出.
+  这样无论是否连上tws耳机，这个client一直固定从speaker输出.
 */
 
 ```
@@ -227,7 +227,7 @@ static int mic2speaker_callback(audio_server_callback_cmt_t cmd,
         /*
           if not use mic data, here should audio_write() next frame data
           using other PCM data source.
-          这里是audio server的线程里，理想的程序可以是向一个write线程发消息，
+          这里是audio server的线程里，理想的程序模型是向一个write线程发消息，
           write线程里调audio_write(), 并需要判断是否写进去了。
         */
         //audio_write(client, other_pcm_data, WRITE_CACHE_SIZE / 2);
@@ -379,7 +379,7 @@ int audio_server_select_private_audio_device(audio_type_t audio_type,
 ```
 **1.10 注册一个硬件设备**
 这个app不需要关注，系统内部已实现，主要是喇叭和BT等注册一些硬件或虚拟硬件设备，
-供播放时切换选择设备用.如果需要，搜索系统里调用地方进行参考.
+供播放时切换选择设备用.如果需要，搜索系统里调用的地方进行参考.
 ```c
 int audio_server_register_audio_device(audio_device_e audio_device,
                              const struct audio_device *p_audio_device);
@@ -419,7 +419,7 @@ int audio_server_set_public_speaker_mute(uint8_t is_mute);
 //获得speaker是否mute
 uint8_t audio_server_get_public_speaker_mute(void);
 ```
-**1.12 数据长度的更改，目前没提供动态修改录音大小的接口，是宏定义配置的**
+**1.12 数据长度的更改，目前没提供动态修改录音DMA一帧大小的接口，是宏定义配置的**
 
 在audio.h里的这个CFG_AUDIO_RECORD_PIPE_SIZE宏，表示一次录音的dma中断的数据大小，
 如果是320，则对16k单声道的mic，是10ms来一次数据，并调audio_open的callback
@@ -473,6 +473,19 @@ AUDIO_SPEAKER_USING_CODEC=y
 # 输出到I2S
 CONFIG_AUDIO_TX_USING_I2S=y
 ```
+如果输出到I2S, 先根据[设备级驱动接口](/drivers/audio.md)调通I2S, 再audio server里要参考那个配置好下面的i2s_config(my, 1);内部的实现，并跟踪下speaker_tx_done是否到达
+
+```c
+static void config_tx(audio_device_speaker_t *my, audio_client_t client)
+{
+#if defined(AUDIO_TX_USING_I2S)
+    i2s_config(my, 1);
+    rt_device_set_tx_complete(my->i2s, speaker_tx_done);
+#else
+    ....
+#endif
+```
+
 ```python
 #如果要多个client一起工作，比如录音时还可以播放音乐，需要配置这个
 #这样分别用AUDIO_TX和AUDIO_RX创建的两个client就可以一起工作
@@ -537,8 +550,14 @@ void sifli_resample_close(sifli_resample_t *p);
   CONFIG_PKG_USING_ANYKA=y
   也可以参考这个算法替换audio_3a.c的，
   代码在sdk\middleware\audio\anyka
+  也都会实现这个函数
 
 ```c
+/*
+    设置算法关闭还是打开，一般工厂频想测试时需要关闭算法。历史遗留，
+    可以自己实现，mic和down没用
+*/
+void audio_3a_set_bypass(uint8_t is_bypass, uint8_t mic, uint8_t down);
 /*
     BT hfp, downlink data, 
 parameter
@@ -565,7 +584,7 @@ void audio_3a_close();
 
 ```
 ## 硬件功放的适配
-喇叭前的功放，不同平台该更改硬件功放，需要实现下面三个函数,
+喇叭前的功放，不同平台要更改硬件功放，需要实现下面三个函数,
 在$(sdk_root)/middleware/audio/audio_port/audio_pa_api.c
 ```c
 RT_WEAK void audio_hardware_pa_init()
@@ -586,7 +605,7 @@ RT_WEAK void audio_hardware_pa_stop(void)
 如果使用芯片的codec，芯片上有硬件EQ，目前软件设置上只支持44.1k和16k，
 可以修改这个文件决定某种音乐类型是否打开或关闭EQ。
 在$(sdk_root)/middleware/audio/audio_port/audio_eq_config.c
-特别时工厂测试频响测试模式时，要关闭EQ， 可在get_eq_config()这个函数里加判断，如果时工厂模式就返回0关闭EQ。
+特别是工厂测试频响测试模式时，要关闭EQ， 可在get_eq_config()这个函数里加判断，如果时工厂模式就返回0关闭EQ。
 
 ```c
 /*
@@ -618,7 +637,7 @@ int8_t g_adc_volume = 0; //mic增益
 */
 int8_t g_tel_max_vol = -2;
 
-//电话的16个音量等级，单位为1eb
+//电话的16个音量等级，单位为1db
 int8_t g_tel_vol_level[16] = {-36, -34, -32, -30, -28, -26, -24, -22, -20, -17, -14, -11, -10, -8, -6, -4};
 
 
@@ -635,7 +654,7 @@ int8_t g_music_vol_level[16] = {-55, -34, -32, -30, -28, -26, -24, -22, -20, -17
 视频使用了ffmpeg，需要配置ffmpeg， 见exernal/ffmpeg/Kconfig，封装了使用ffmepg的接口
 为了提高播放速度，需要用sifli提供的视频工具转换下MP4文件编码格式。
 [GraphicsTool](https://wiki.sifli.com/tools/index.html)
-也支持自动识别sifli自定义的ezip格式的视频文件， 需要用sifli提供的工具把mp4文件转换为ezip
+底下也支持自动识别sifli自定义的ezip格式的视频文件， 需要用sifli提供的工具把mp4文件转换为ezip
 
 API参考media_dec.h中说明
     
