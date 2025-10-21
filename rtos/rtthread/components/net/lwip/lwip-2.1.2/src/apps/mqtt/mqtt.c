@@ -1020,7 +1020,7 @@ mqtt_parse_incoming(mqtt_client_t *client, struct pbuf *p)
             if ((msg_rem_len == 0) || (cpy_len == buffer_space))
             {
                 /* Whole message received or buffer is full */
-                mqtt_connection_status_t res = mqtt_message_received(client, fixed_hdr_len, cpy_len, msg_rem_len);
+                mqtt_connection_status_t res = mqtt_message_received(client, fixed_hdr_len, client->msg_idx, msg_rem_len);
                 if (res != MQTT_CONNECT_ACCEPTED)
                 {
                     return res;
