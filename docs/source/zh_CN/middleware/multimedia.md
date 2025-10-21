@@ -3,7 +3,7 @@
    第三方lib开发，不要直接在lib里调用audio_open()等接口，因为头文件和结构体可能更改，要封装一个adaptor，在adaptor里调用多媒体的接口，因为lib发布后，头文件里一些结构体可能更改，需要重新编译,这样只编译adaptor的代码，不用重新编译发布lib
 
 ## 音频
-音频的驱动接口的RT-Thread 设备驱动说明里，[设备级驱动接口](/drivers/audio.md)，在实际使用时，涉及电话时带回声消除的，播放音乐过程来通知音的，就是存在多个音频都请求设备驱动工作的场景.可能的需求是, 按优先级互相打断，被打断后可以恢复播放，或者混音一起播放，为了满足这个需求，实现了audio server,参考[audio server使用说明](/extra/audio_server.pdf)，管理多个用户的音频设备的使用，采用client/server的设计模式，每个音频播放请求为一个client。
+音频的驱动接口的RT-Thread 设备驱动说明里，[Audprc设备级驱动接口](/drivers/audprc_audcodec.md)，在实际使用时，涉及电话时带回声消除的，播放音乐过程来通知音的，就是存在多个音频都请求设备驱动工作的场景.可能的需求是, 按优先级互相打断，被打断后可以恢复播放，或者混音一起播放，为了满足这个需求，实现了audio server,参考[audio server使用说明](/extra/audio_server.pdf)，管理多个用户的音频设备的使用，采用client/server的设计模式，每个音频播放请求为一个client。
 开机会自动调audio_server_init()启动audio server， 使用了audio server, 音频相关的都应该基于audio server作为audio与底层设备的交互。
 
 接口在$(sdk_root)/middleware/audio/include/audio_server.h里定义。
@@ -473,7 +473,7 @@ AUDIO_SPEAKER_USING_CODEC=y
 # 输出到I2S
 CONFIG_AUDIO_TX_USING_I2S=y
 ```
-如果输出到I2S, 先根据[设备级驱动接口](/drivers/audio.md)调通I2S, 再audio server里要参考那个配置好下面的i2s_config(my, 1);内部的实现，并跟踪下speaker_tx_done是否到达
+如果输出到I2S, 先根据[I2S设备级驱动接口](/drivers/i2s.md)调通I2S, 再audio server里要参考那个配置好下面的i2s_config(my, 1);内部的实现，并跟踪下speaker_tx_done是否到达
 
 ```c
 static void config_tx(audio_device_speaker_t *my, audio_client_t client)

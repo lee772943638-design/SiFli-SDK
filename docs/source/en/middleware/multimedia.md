@@ -3,7 +3,7 @@
    When developing third-party libraries, avoid directly calling interfaces like audio_open() in the library, as header files and structures may change. Instead, encapsulate an adaptor to invoke multimedia interfaces. After the library is released, some structures in the header files may be modified. Only recompile the adaptor code without recompiling the released library.
 ## 1 Audio
 In the RT-Thread device driver documentation for audio drivers
-[device driver](/drivers/audio.md)，In practical scenario, multi audio stream may work together, if not support audio mix, only one reqeust can use hardware according to priority, request may resume playback after being interrupted, or mix and play together. To meet these requirements, an audio server was implemented. ref[audio server](/extra/audio_server_en.pdf).use client/server design pattern.
+[audprc device driver](/drivers/audprc_audcodec.md)，In practical scenario, multi audio stream may work together, if not support audio mix, only one reqeust can use hardware according to priority, request may resume playback after being interrupted, or mix and play together. To meet these requirements, an audio server was implemented. ref[audio server](/extra/audio_server_en.pdf).use client/server design pattern.
 
 audio_server_init() will be run at kernel start up,.
 
@@ -464,7 +464,7 @@ CONFIG_AUDIO_RX_USING_I2S=y
 # from PDM
 CONFIG_AUDIO_RX_USING_PDM=y
 ```
-If outputting to I2S, first configure I2S according to the [device-level driver interface](/drivers/audio.md), then in the audio server, refer to that configuration to set up the i2s_config(my, 1); check its internal implementation, and track whether speaker_tx_done is triggered.
+If outputting to I2S, first configure I2S according to the [I2S driver interface](/drivers/i2s.md), then in the audio server, refer to that configuration to set up the i2s_config(my, 1); check its internal implementation, and track whether speaker_tx_done is triggered.
 
 ```c
 static void config_tx(audio_device_speaker_t *my, audio_client_t client)
