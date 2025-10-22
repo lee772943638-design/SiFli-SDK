@@ -89,10 +89,10 @@ struct i2s_audio_cfg_t bf0_i2s_audio_obj[] = {
 	caps.udata.value = 0;
 	rt_device_control(i2s, AUDIO_CTL_CONFIGURE, &caps);
 ```
-By default, I2S outputs directly to peripherals. There is also an advanced usage where I2S outputs to the audprc module of a chip. This is not commonly used, and currently not implemented. If needed, configure it as follows:
-**if you don't know what is i2s-->audprc, skip this**
+By default, I2S outputs directly to peripherals. There is also an advanced usage where I2S inputs from audprc module. This is not commonly used. If needed, configure it as follows:
+**if you don't know what is audprc->i2s, skip this**
 ```c
-	/* Directly output the input to the external I2S device, not required here */
+	/* i2s input from audprc*/
 	rt_uint32_t inter = 1;
 	rt_device_control(i2s, AUDIO_CTL_SETINPUT, (void *)inter);
 ```

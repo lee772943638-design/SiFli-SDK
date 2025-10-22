@@ -1,14 +1,9 @@
-# Audprc/Audcodec Audio设备
-芯片内部有Audprc和Audcodec，Audprc用于数字处理，Audcodec是数字转模拟。
-常用的音频数据流程是Audprc-->Audcodec-->Speaker
-还有的方式是Audprc-->I2S-->芯片外围Codec芯片<br>
-主要功能包括： <br>
+# I2S Audio设备
+
 - 输入和输出采样率设置
 - 输入和输出通道数设置
 - 每个采样的位深设置
 - 主从模式设置
-
-# I2S Audio设备
 
 音频驱动程序包括两层：用于 I2S 的硬件访问层 (HAL) 和用于 RT-Thread 的适配层。<br>
 硬件访问层提供用于访问 I2S 外设寄存器的基本 API。 有关详细信息，请参阅 I2S 的 API 文档。<br>
@@ -17,7 +12,7 @@
 - 麦克风设备和扬声器设备支持
 - 用于音频捕获和播放的 DMA
 - 音频捕获转储工具支持并保存在 PC 中
-- 两路I2S硬件支持，其中I2S1只用来输入， I2S2 既支持输入也支持输出
+- 有的芯片有多路I2S硬件，58x芯片其中I2S1只用来输入，具体需要看对应芯片的手册。 
 
 ## 驱动配置
 
@@ -109,9 +104,9 @@ struct i2s_audio_cfg_t bf0_i2s_audio_obj[] = {
     caps.udata.value = 0;
     rt_device_control(i2s, AUDIO_CTL_CONFIGURE, &caps);
 ```
-I2S默认是直接输出到外设的，还有个高级用法，是I2S输出个芯片的audprc模块，
+I2S默认是直接输出到外设的，还有个高级用法，是I2S输入来自芯片的audprc模块，
 这个不常用，目前还没有这样用, 如果需要的话，得下面这样设置，
-如果不知到什么是i2s-->audprc,忽略下面这段代码，
+如果不知道什么是audprc->i2s,忽略下面这段代码，
 ```c
 /*输入直接输出到外部I2s设备，这里不需要*/
 rt_uint32_t inter = 1;
