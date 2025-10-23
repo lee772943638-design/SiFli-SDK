@@ -573,8 +573,8 @@ static rt_err_t rt_msd_init(rt_device_t dev)
     {
         struct rt_spi_configuration cfg;
         cfg.data_width = 8;
-        cfg.mode = RT_SPI_MASTER | RT_SPI_MODE_3 | RT_SPI_MSB; /* SPI Compatible Modes 0 */
-        cfg.max_hz = 400 * 1000; /* 24MHzbit/s */
+        cfg.mode = RT_SPI_MASTER | RT_SPI_MODE_3 | RT_SPI_MSB; /* SPI Compatible Mode 3 */
+        cfg.max_hz = 400 * 1000; /* 400K/s */
         cfg.frameMode = RT_SPI_MOTO;
         rt_spi_configure(msd->spi_device, &cfg);
     }
@@ -1291,7 +1291,7 @@ static rt_err_t rt_msd_init(rt_device_t dev)
         struct rt_spi_configuration cfg_d;
         cfg_d.data_width = 8;
         cfg_d.mode = RT_SPI_MASTER | RT_SPI_MODE_3 | RT_SPI_MSB; /* SPI Compatible Modes 0 */
-        cfg_d.max_hz = CARD_MAX_HZ; /* 24MHzbit/s */
+        cfg_d.max_hz = CARD_MAX_HZ; /* 12MHzbit/s */ //msd->max_clock
         cfg_d.frameMode = RT_SPI_MOTO;
         rt_spi_configure(msd->spi_device, &cfg_d);
     } /* config spi */
