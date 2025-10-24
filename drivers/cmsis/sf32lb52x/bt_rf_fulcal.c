@@ -4611,8 +4611,12 @@ uint32_t bt_rfc_txdc_cal(uint32_t rslt_start_addr, uint8_t cal_power_enable)
     hwp_bt_rfc->TRF_EDR_REG2 &= ~BT_RFC_TRF_EDR_REG2_BRF_TRF_EDR_PWRMTR_GC_LV;
 
     hwp_bt_rfc->TRF_EDR_REG1 &= ~BT_RFC_TRF_EDR_REG1_BRF_TRF_EDR_TMXBUF_IBLD_LV ;
-    //set rcos bw to 0.4M
-    memcpy((void *)0x40084168, (void *)g_cos_bw, sizeof(g_cos_bw));
+
+    //set rcos bw to 0.4M, in gcc could not use memcpy as it will use bytes copy.
+    uint32_t *p_cos_bw = (uint32_t *)0x40084168;
+    for (i = 0; i < sizeof(g_cos_bw) / sizeof(g_cos_bw[0]); i++, p_cos_bw++)
+        *p_cos_bw = g_cos_bw[i];
+
 #if 0
     write_memory(0x40084168, 0x00FFF000);
     write_memory(0x4008416C, 0x00FFCFFD);
