@@ -2402,14 +2402,15 @@ def action_install(args):  # type: ignore
         tool_obj.install(tool_version)
     conan_config_path = get_conan_config(get_sifli_sdk_version())
     # run conan config install <path>
+    _, _, virtualenv_python, _ = get_python_env_path()
     try:
-        subprocess.check_call(['conan', 'config', 'install', conan_config_path],
+        subprocess.check_call([virtualenv_python, '-m', 'conan', 'config', 'install', conan_config_path],
                               stdout=sys.stdout, stderr=sys.stderr)
     except subprocess.CalledProcessError as e:
         fatal(f'Failed to run conan config install {conan_config_path} with error: {e}')
         raise SystemExit(1)
     try:
-        subprocess.check_call(['conan', 'remote', 'add', 'artifactory', 'https://jfrog.sifli.com/artifactory/api/conan/conan-local', '--force'],
+        subprocess.check_call([virtualenv_python, '-m', 'conan', 'remote', 'add', 'artifactory', 'https://jfrog.sifli.com/artifactory/api/conan/conan-local', '--force'],
                               stdout=sys.stdout, stderr=sys.stderr)
     except subprocess.CalledProcessError as e:
         fatal(f'Failed to run conan remote add artifactory with error: {e}')
