@@ -1,3 +1,3 @@
 [submodule "middleware/bluetooth"]
 	path = middleware/bluetooth
-	url = ../SiFli-Bluetooth.git
+	url = https://github.com/OpenSiFli/SiFli-Bluetooth.git
